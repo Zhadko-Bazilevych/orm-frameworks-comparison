@@ -15,6 +15,7 @@ export type User = {
 };
 
 export type UsersFindAllResponse = BaseResponse<User[]>;
+export type UserDeleteResponse = BaseResponse<User>;
 
 export interface IUsersService {
   getUsers(): Promise<UsersFindAllResponse>;
