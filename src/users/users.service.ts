@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
-import { User } from 'src/db/sequelize/models/user.model';
-import { UserModel } from 'src/users/entities/user.entity';
+import { Inject } from '@nestjs/common';
+import { BaseService } from 'src/utils/utils.service';
+import { IUsersService } from 'src/users/users.types';
+import { UsersSequelizeService } from 'src/users/users.sequelize.service';
+import { InterfaceToType } from 'src/utils/utils.types';
 
-@Injectable()
-export class UsersService {
+export class UsersService extends BaseService<InterfaceToType<IUsersService>> {
   constructor(
-    @InjectModel(User)
-    private userModel: typeof User,
-  ) {}
-
-  async findAll(): Promise<UserModel[]> {
-    return this.userModel.findAll();
+    @Inject(UsersSequelizeService)
+    usersSequelizeService: UsersSequelizeService,
+    // @Inject(UserTypeOrmService)
+    // userTypeOrmService: UserTypeOrmService,
+  ) {
+    super(usersSequelizeService);
   }
 }
