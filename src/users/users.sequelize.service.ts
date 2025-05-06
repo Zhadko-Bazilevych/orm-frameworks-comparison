@@ -1,52 +1,109 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { User } from 'src/db/sequelize/models/user.model';
-import {
-  IUsersServiceImplementation,
-  UserDeleteResponse,
-  UsersFindAllResponse,
-} from 'src/users/users.types';
+import { Optional, QueryTypes } from 'sequelize';
+import { User as UserModel } from 'src/db/sequelize/models/user.model';
+import { IUsersServiceImplementation, User } from 'src/users/users.types';
 import { measureTime } from 'src/utils/utils.helpers';
 
 @Injectable()
 export class UsersSequelizeService implements IUsersServiceImplementation {
-  constructor(@InjectModel(User) private userModel: typeof User) {}
+  constructor(@InjectModel(UserModel) private userModel: typeof UserModel) {}
 
-  async getUsersDefault(): Promise<UsersFindAllResponse> {
+  async getUsersDefault() {
     const result = measureTime(() => {
       return this.userModel.findAll({ limit: 100 });
-    });
-    await this.userModel.findAll({
-      limit: 100,
-      logging: (sql) => {
-        console.log('Raw SQL:', sql);
-      },
     });
     return result;
   }
 
-  async getUsersRaw(): Promise<UsersFindAllResponse> {
-    const result = measureTime(() => {
-      return this.userModel.findAll({ limit: 100 });
+  async getUsersRaw() {
+    const result = measureTime(async () => {
+      const [userList] = (await this.userModel.sequelize!.query(
+        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at", "updatedAt" 
+        FROM "user" AS "user" LIMIT 100`,
+      )) as [User[], number];
+      return userList;
     });
-    await this.userModel.sequelize?.query(
-      `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at", "updatedAt" 
-      FROM "user" AS "user" LIMIT 100`,
-    );
     return result;
   }
 
-  async deleteUserDefault(id: number): Promise<UserDeleteResponse> {
-    return {
-      data: { email: '', fullName: '', id: 0, passwordHash: '' },
-      timeMs: 0,
-    };
+  async deleteUserDefault(id: number) {
+    const result = measureTime(async () => {
+      const deletedCount = await this.userModel.destroy({ where: { id: id } });
+      return !!deletedCount;
+    });
+    return result;
   }
 
-  async deleteUserRaw(id: number): Promise<UserDeleteResponse> {
-    return {
-      data: { email: '', fullName: '', id: 0, passwordHash: '' },
-      timeMs: 0,
-    };
+  async deleteUserRaw(id: number) {
+    const result = measureTime(async () => {
+      const [deletedCount] = await this.userModel.sequelize!.query(
+        `DELETE FROM "user" WHERE "id" = ${id}`,
+      );
+      return !!deletedCount;
+    });
+    return result;
+  }
+
+  async createUserDefault(user: Optional<User, 'id'>) {
+    const result = measureTime(() => {
+      console.log(user);
+      return this.userModel.create(user);
+    });
+    return result;
+  }
+
+  async createUserRaw(user: Optional<User, 'id'>) {
+    const result = measureTime(async () => {
+      const [[newUser]] = (await this.userModel.sequelize!.query(
+        `INSERT INTO "user" ("id", "email", "password_hash", "full_name", "created_at", "updatedAt")
+         VALUES (DEFAULT, $1, $2, $3, $4, $5)
+         RETURNING "id", "email", "password_hash", "full_name", "created_at", "updatedAt";`,
+        {
+          bind: [
+            user.email,
+            user.passwordHash,
+            user.fullName,
+            new Date(),
+            new Date(),
+          ],
+        },
+      )) as [User[], unknown];
+      return newUser;
+    });
+    return result;
+  }
+
+  async updateUserDefault(user: User) {
+    const result = measureTime(async () => {
+      const [, [affectedUser]] = await this.userModel.update(user, {
+        where: { id: user.id },
+        returning: true,
+        logging: console.log,
+      });
+      return affectedUser;
+    });
+    return result;
+  }
+
+  async updateUserRaw(user: User) {
+    const result = measureTime(async () => {
+      const [[updatedUser]] = (await this.userModel.sequelize!.query(
+        `UPDATE "user" SET "id"=$1,"email"=$2,"password_hash"=$3,"full_name"=$4,"updatedAt"=$5 WHERE "id" = $6 RETURNING "id","email","password_hash","full_name","created_at","updatedAt"`,
+        {
+          bind: [
+            user.id,
+            user.email,
+            user.passwordHash,
+            user.fullName,
+            new Date(),
+            user.id,
+          ],
+        },
+      )) as [User[], unknown];
+      return updatedUser;
+    });
+
+    return result;
   }
 }

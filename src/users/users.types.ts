@@ -8,16 +8,17 @@ export interface IUsersServiceImplementation
   extends GetServiceImplementation<InterfaceToType<IUsersService>> {}
 
 export type User = {
-  id: number;
+  id?: number;
   email: string;
   passwordHash: string;
   fullName: string;
 };
 
 export type UsersFindAllResponse = BaseResponse<User[]>;
-export type UserDeleteResponse = BaseResponse<User>;
 
 export interface IUsersService {
   getUsers(): Promise<UsersFindAllResponse>;
-  deleteUser(id: number): Promise<BaseResponse<User>>;
+  deleteUser(id: number): Promise<BaseResponse<boolean>>;
+  createUser(body: User): Promise<BaseResponse<User>>;
+  updateUser(body: User): Promise<BaseResponse<User>>;
 }
