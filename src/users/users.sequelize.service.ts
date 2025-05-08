@@ -78,7 +78,6 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
       const [, [affectedUser]] = await this.userModel.update(user, {
         where: { id: user.id },
         returning: true,
-        logging: console.log,
       });
       return affectedUser;
     });

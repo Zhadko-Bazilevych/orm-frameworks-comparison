@@ -19,7 +19,6 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
             as: 'orderItems',
           },
         ],
-        logging: console.log,
       }) as Promise<Order>;
     });
     return result;
@@ -31,8 +30,6 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
         `SELECT "order"."id", "order"."user_id" AS "userId", "order"."status", "order"."total_price" AS "totalPrice", "order"."created_at" AS "createdAt", "orderItems"."order_id" AS "orderItems.orderId", "orderItems"."product_id" AS "orderItems.productId", "orderItems"."quantity" AS "orderItems.quantity", "orderItems"."price" AS "orderItems.price" FROM "Order" AS "order" LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id" WHERE "order"."id" 
         = '${id}'`,
       )) as [Order[], number];
-
-      console.log(res[0]);
 
       return res[0];
     });

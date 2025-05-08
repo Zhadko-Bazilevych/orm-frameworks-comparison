@@ -40,7 +40,6 @@ export class UsersController {
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ): Promise<BaseResponse<User>> {
-    console.log(userData);
     const hashedPassword = (await bcrypt.hash(userData.password, 10)) as string;
     const newUser = {
       email: userData.email,
@@ -50,8 +49,6 @@ export class UsersController {
     const result = await this.usersService.call(orm, 'createUser', queryType, [
       newUser,
     ]);
-
-    console.log('controller', result);
     return result;
   }
 
