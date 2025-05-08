@@ -2,11 +2,12 @@ import {
   Table,
   Column,
   Model,
-  DataType,
   ForeignKey,
   Unique,
+  DataType,
+  BelongsTo,
 } from 'sequelize-typescript';
-import { User } from 'src/db/sequelize/models/user.model';
+import { User } from 'src/db/sequelize/models/user.model'; // Ensure correct path to the User model
 import { CreationOptional } from 'sequelize';
 
 @Table({
@@ -50,4 +51,7 @@ export class Profile extends Model {
     allowNull: true,
   })
   phone: string;
+
+  @BelongsTo(() => User)
+  user: User;
 }

@@ -4,9 +4,13 @@ import {
   Model,
   DataType,
   ForeignKey,
+  HasMany,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { CreationOptional } from 'sequelize';
 import { Category } from 'src/db/sequelize/models/category.model';
+import { Comment } from 'src/db/sequelize/models/comment.model';
+import { OrderItem } from 'src/db/sequelize/models/order-item.model';
 
 @Table({
   modelName: 'product',
@@ -63,4 +67,13 @@ export class Product extends Model {
     defaultValue: DataType.NOW,
   })
   lastUpdated: Date;
+
+  @HasMany(() => OrderItem)
+  orders: OrderItem[];
+
+  @HasMany(() => Comment)
+  comments: Comment[];
+
+  @BelongsTo(() => Category)
+  category: Category;
 }

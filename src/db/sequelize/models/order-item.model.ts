@@ -4,6 +4,7 @@ import {
   Model,
   DataType,
   ForeignKey,
+  BelongsTo,
 } from 'sequelize-typescript';
 import { Order } from 'src/db/sequelize/models/order.model';
 import { Product } from 'src/db/sequelize/models/product.model';
@@ -51,4 +52,10 @@ export class OrderItem extends Model {
     allowNull: false,
   })
   price: string;
+
+  @BelongsTo(() => Order)
+  order: Order;
+
+  @BelongsTo(() => Product)
+  product: Product;
 }
