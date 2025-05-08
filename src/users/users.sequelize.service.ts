@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Optional, QueryTypes } from 'sequelize';
+import { Optional } from 'sequelize';
 import { User as UserModel } from 'src/db/sequelize/models/user.model';
 import { IUsersServiceImplementation, User } from 'src/users/users.types';
 import { measureTime } from 'src/utils/utils.helpers';
@@ -47,7 +47,6 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
 
   async createUserDefault(user: Optional<User, 'id'>) {
     const result = measureTime(() => {
-      console.log(user);
       return this.userModel.create(user);
     });
     return result;
