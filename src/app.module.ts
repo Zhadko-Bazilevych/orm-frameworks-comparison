@@ -9,6 +9,7 @@ import { Product } from 'src/db/sequelize/models/product.model';
 import { Category } from 'src/db/sequelize/models/category.model';
 import { Profile } from 'src/db/sequelize/models/profile.model';
 import { Comment } from 'src/db/sequelize/models/comment.model';
+import { ProductsModule } from 'src/products/products.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { Comment } from 'src/db/sequelize/models/comment.model';
     }),
     UsersModule,
     OrdersModule,
+    ProductsModule,
   ],
 })
 export class AppModule implements OnModuleInit {
