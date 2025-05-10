@@ -18,7 +18,9 @@ export class CommentsSequelizeService
 
   async getCommentTreeByIdDefault(id: number) {
     const result = await measureTime(async () => {
-      const comment = await this.commentModel.findByPk(id);
+      const comment = await this.commentModel.findByPk(id, {
+        logging: console.log,
+      });
       if (!comment) return null;
 
       const buildRecursively = async (parent: CommentModel): Promise<any> => {
@@ -30,6 +32,7 @@ export class CommentsSequelizeService
               as: 'user',
             },
           ],
+          logging: console.log,
         });
 
         const childTrees = await Promise.all(
@@ -49,18 +52,55 @@ export class CommentsSequelizeService
   }
 
   async getCommentTreeByIdRaw(id: number) {
-    return await this.getCommentTreeByIdDefault(id);
+    const result = await measureTime(async () => {
+      const [commentRows] = await this.commentModel.sequelize!.query(
+        `
+      SELECT "comment"."id", "comment"."user_id" AS "userId", 
+             "comment"."product_id" AS "productId", 
+             "comment"."parent_id" AS "parentId", 
+             "comment"."content", 
+             "comment"."created_at" AS "createdAt"
+      FROM "Comment" AS "comment"
+      WHERE "comment"."id" = '${id}'
+      `,
+      );
+
+      const root = commentRows[0];
+      if (!root) return null;
+
+      const buildRecursively = async (parent: any): Promise<any> => {
+        const [children] = await this.commentModel.sequelize!.query(
+          `
+        SELECT "comment"."id", "comment"."user_id" AS "userId", 
+               "comment"."product_id" AS "productId", 
+               "comment"."parent_id" AS "parentId", 
+               "comment"."content", 
+               "comment"."created_at" AS "createdAt", 
+               "user"."id" AS "user.id", 
+               "user"."email" AS "user.email", 
+               "user"."password_hash" AS "user.passwordHash", 
+               "user"."full_name" AS "user.fullName", 
+               "user"."createdAt" AS "user.createdAt", 
+               "user"."updatedAt" AS "user.updatedAt"
+        FROM "Comment" AS "comment"
+        LEFT OUTER JOIN "User" AS "user" ON "comment"."user_id" = "user"."id"
+        WHERE "comment"."parent_id" = ${parent.id}
+        `,
+        );
+
+        const childrenWithSub = await Promise.all(
+          children.map((child: any) => buildRecursively(child)),
+        );
+
+        return {
+          ...parent,
+          children: childrenWithSub,
+        };
+      };
+
+      return buildRecursively(root);
+    });
+
+    return result;
   }
-
-  // async getCommentsRaw(filterData: CommentRequestBody) {
-  //   const offset = (filterData.page - 1) * filterData.pageSize;
-  //   const result = measureTime(async () => {
-  //     const [updatedUser] = (await this.commentModel.sequelize!.query(
-  //       `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated" FROM "Comment" AS "comment" WHERE "comment"."category_id" = '${filterData.categoryId}' ORDER BY "comment"."name" ASC LIMIT '${filterData.pageSize}' OFFSET ${offset};`,
-  //     )) as [Comment[], unknown];
-  //     return updatedUser;
-  //   });
-
-  //   return result;
-  // }
 }
