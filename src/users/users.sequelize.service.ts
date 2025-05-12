@@ -20,7 +20,7 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
     const result = measureTime(async () => {
       const [userList] = (await this.userModel.sequelize!.query(
         `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at", "updatedAt" 
-        FROM "user" AS "user" LIMIT 100`,
+        FROM "User" AS "user" LIMIT 100`,
       )) as [User[], number];
       return userList;
     });
@@ -38,7 +38,7 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async deleteUserRaw(id: number) {
     const result = measureTime(async () => {
       const [deletedCount] = await this.userModel.sequelize!.query(
-        `DELETE FROM "user" WHERE "id" = ${id}`,
+        `DELETE FROM "User" WHERE "id" = ${id}`,
       );
       return !!deletedCount;
     });
@@ -55,7 +55,7 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async createUserRaw(user: Optional<User, 'id'>) {
     const result = measureTime(async () => {
       const [[newUser]] = (await this.userModel.sequelize!.query(
-        `INSERT INTO "user" ("id", "email", "password_hash", "full_name", "created_at", "updatedAt")
+        `INSERT INTO "User" ("id", "email", "password_hash", "full_name", "created_at", "updatedAt")
          VALUES (DEFAULT, $1, $2, $3, $4, $5)
          RETURNING "id", "email", "password_hash", "full_name", "created_at", "updatedAt";`,
         {

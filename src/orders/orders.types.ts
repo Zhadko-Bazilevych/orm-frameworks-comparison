@@ -8,11 +8,12 @@ export interface IOrdersServiceImplementation
   extends GetServiceImplementation<InterfaceToType<IOrdersService>> {}
 
 export type OrderStatus =
-  | 'pending'
+  | 'processing'
+  | 'confirmed'
   | 'shipped'
   | 'delivered'
   | 'cancelled'
-  | 'paid';
+  | 'returned';
 
 export type Order = {
   id?: number;
@@ -30,9 +31,30 @@ export type OrderItem = {
   price: string;
 };
 
+export type OrderItemRaw = {
+  id: number;
+  userId: number;
+  status: string;
+  totalPrice: number;
+  created_at: string;
+  'orderItems.orderId': number;
+  'orderItems.productId': number;
+  'orderItems.quantity': number;
+  'orderItems.price': number;
+};
+
+export type ProductRaw = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  categoryId: number;
+  lastUpdated: string;
+};
+
 export interface IOrdersService {
   getOrder(id: number): Promise<BaseResponse<Order | Order[]>>;
-  // deleteOrder(id: number): Promise<BaseResponse<boolean>>;
   createOrder(body: Order): Promise<BaseResponse<Order>>;
-  // updateOrder(body: Order): Promise<BaseResponse<Order>>;
+  confirmOrder(id: number): Promise<BaseResponse<boolean>>;
 }

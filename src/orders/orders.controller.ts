@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Put, Query } from '@nestjs/common';
 import { OrdersService } from 'src/orders/orders.service';
 import { Order } from 'src/orders/orders.types';
 import { BaseResponse, ORM, QueryType } from 'src/utils/utils.types';
@@ -37,6 +37,21 @@ export class OrdersController {
       'createOrder',
       queryType,
       [orderData],
+    );
+    return result;
+  }
+
+  @Put()
+  async confirmOrder(
+    @Query('orderId') orderId: number,
+    @Query('orm') orm: ORM,
+    @Query('queryType') queryType: QueryType,
+  ): Promise<BaseResponse<boolean>> {
+    const result = await this.ordersService.call(
+      orm,
+      'confirmOrder',
+      queryType,
+      [orderId],
     );
     return result;
   }

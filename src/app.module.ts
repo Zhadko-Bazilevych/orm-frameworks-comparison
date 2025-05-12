@@ -1,6 +1,6 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
-import { User } from './db/sequelize/models/user.model';
+import { User } from 'src/db/sequelize/models/user.model';
 import { UsersModule } from 'src/users/users.module';
 import { OrdersModule } from 'src/orders/orders.module';
 import { OrderItem } from 'src/db/sequelize/models/order-item.model';

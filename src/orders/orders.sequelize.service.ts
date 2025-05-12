@@ -1,14 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { Optional } from 'sequelize';
+import { Optional, QueryTypes } from 'sequelize';
 import { OrderItem } from 'src/db/sequelize/models/order-item.model';
 import { Order as OrderModel } from 'src/db/sequelize/models/order.model';
-import { IOrdersServiceImplementation, Order } from 'src/orders/orders.types';
+import { Product as ProductModel } from 'src/db/sequelize/models/product.model';
+import {
+  IOrdersServiceImplementation,
+  Order,
+  OrderItemRaw,
+  ProductRaw,
+} from 'src/orders/orders.types';
 import { measureTime } from 'src/utils/utils.helpers';
 
 @Injectable()
 export class OrdersSequelizeService implements IOrdersServiceImplementation {
-  constructor(@InjectModel(OrderModel) private orderModel: typeof OrderModel) {}
+  constructor(
+    @InjectModel(OrderModel) private orderModel: typeof OrderModel,
+    @InjectModel(ProductModel) private productModel: typeof ProductModel,
+  ) {}
 
   async getOrderDefault(id: number) {
     const result = measureTime(() => {
@@ -74,6 +83,136 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
       }
       return newOrder;
     });
+    return result;
+  }
+
+  async confirmOrderDefault(orderId: number) {
+    const sequelize = this.orderModel.sequelize!;
+    console.log('startHere', orderId);
+    const result = measureTime(async () => {
+      return sequelize.transaction(async (t) => {
+        const order = await this.orderModel.findByPk(orderId, {
+          include: [OrderItem],
+          transaction: t,
+          logging: console.log,
+          raw: false,
+        });
+        console.log('ORDER: ', order);
+        if (!order) {
+          throw new Error('Order not found');
+        }
+
+        for (const item of order.orderItems) {
+          const product = await this.productModel.findByPk(item.productId, {
+            transaction: t,
+            logging: console.log,
+          });
+          console.log('PRODUCT: ', product);
+          if (!product) {
+            throw new Error(`Product with id ${item.productId} not found`);
+          }
+
+          product.stock -= item.quantity;
+
+          if (product.stock < 0) {
+            throw new Error(
+              `Product with id ${product.id} have less than requires ${item.quantity} in stock (currently ${product.stock})`,
+            );
+          }
+
+          await product.save({ transaction: t });
+        }
+
+        order.status = 'confirmed';
+        await order.save({ transaction: t });
+
+        return true;
+      });
+    });
+
+    return result;
+  }
+
+  async confirmOrderRaw(orderId: number) {
+    const sequelize = this.orderModel.sequelize!;
+    const result = await measureTime(async () => {
+      return sequelize.transaction(async (t) => {
+        const orders: OrderItemRaw[] = await sequelize.query<OrderItemRaw>(
+          `SELECT "order"."id", "order"."user_id" AS "userId", "order"."status", "order"."total_price" AS "totalPrice", "order"."created_at", 
+          "orderItems"."order_id" AS "orderItems.orderId", "orderItems"."product_id" AS "orderItems.productId", 
+          "orderItems"."quantity" AS "orderItems.quantity", "orderItems"."price" AS "orderItems.price" 
+   FROM "Order" AS "order" 
+   LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id" 
+   WHERE "order"."id" = '${orderId}';`,
+          {
+            type: QueryTypes.SELECT,
+            transaction: t,
+            logging: console.log,
+          },
+        );
+
+        const order = orders[0] as OrderItemRaw | undefined;
+
+        if (!order) {
+          throw new Error('Order not found');
+        }
+
+        const groupedItems = new Map<
+          number,
+          { productId: number; quantity: number }
+        >();
+        for (const item of orders) {
+          if (!item['orderItems.productId']) continue;
+          const productId = item['orderItems.productId'];
+          const quantity = item['orderItems.quantity'];
+          groupedItems.set(productId, { productId, quantity });
+        }
+
+        for (const item of groupedItems.values()) {
+          const [products] = await sequelize.query<ProductRaw>(
+            `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated" 
+           FROM "Product" AS "product" 
+           WHERE "product"."id" = ${item.productId};`,
+            { type: QueryTypes.SELECT, transaction: t },
+          );
+
+          const product = products[0] as ProductRaw | undefined;
+
+          if (!product) {
+            throw new Error(`Product with id ${item.productId} not found`);
+          }
+
+          const newStock = product.stock - item.quantity;
+
+          if (newStock < 0) {
+            throw new Error(
+              `Product with id ${product.id} have less than requires ${item.quantity} in stock (currently ${product.stock})`,
+            );
+          }
+
+          await sequelize.query(
+            `UPDATE "Product" SET "stock"=$1 WHERE "id" = $2`,
+            {
+              bind: [newStock, item.productId],
+              transaction: t,
+              logging: console.log,
+            },
+          );
+        }
+
+        await sequelize.query(
+          `UPDATE "Order" SET "status" = $1 WHERE "id" = $2`,
+          {
+            bind: ['confirmed', orderId],
+            transaction: t,
+            logging: console.log,
+          },
+        );
+
+        return true;
+      });
+    });
+
     return result;
   }
 }
