@@ -30,7 +30,7 @@ export class OrderItem extends Model {
     primaryKey: true,
     field: 'order_id',
   })
-  orderId: number;
+  declare orderId: number;
 
   @ForeignKey(() => Product)
   @Column({
@@ -39,23 +39,23 @@ export class OrderItem extends Model {
     primaryKey: true,
     field: 'product_id',
   })
-  productId: number;
+  declare productId: number;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  quantity: number;
+  declare quantity: number;
 
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
   })
-  price: string;
+  declare price: string;
 
   @BelongsTo(() => Order)
-  order: Order;
+  declare order: Order;
 
   @BelongsTo(() => Product)
-  product: Product;
+  declare product: Product;
 }

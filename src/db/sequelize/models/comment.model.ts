@@ -40,7 +40,7 @@ export class Comment extends Model {
     allowNull: true,
     field: 'user_id',
   })
-  userId: number;
+  declare userId: number;
 
   @ForeignKey(() => Product)
   @Column({
@@ -48,7 +48,7 @@ export class Comment extends Model {
     allowNull: true,
     field: 'product_id',
   })
-  productId: number;
+  declare productId: number;
 
   @ForeignKey(() => Self)
   @Column({
@@ -56,13 +56,13 @@ export class Comment extends Model {
     allowNull: true,
     field: 'parent_id',
   })
-  parentId: number;
+  declare parentId: number;
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
   })
-  content: string;
+  declare content: string;
 
   @Column({
     type: DataType.DATE,
@@ -72,11 +72,11 @@ export class Comment extends Model {
   declare createdAt: Date;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 
   @BelongsTo(() => Product)
-  product: Product;
+  declare product: Product;
 
   @BelongsTo(() => Self, { foreignKey: 'parentId' })
-  parentComment: Self;
+  declare parentComment: Self;
 }

@@ -32,25 +32,28 @@ export class Product extends Model {
     type: DataType.TEXT,
     allowNull: false,
   })
-  name: string;
+  declare name: string;
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  description: string;
+  declare description: string;
 
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
   })
-  price: string;
+  declare price: string;
 
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
+    validate: {
+      min: 0,
+    },
   })
-  stock: number;
+  declare stock: number;
 
   @ForeignKey(() => Category)
   @Column({
@@ -58,7 +61,7 @@ export class Product extends Model {
     allowNull: true,
     field: 'category_id',
   })
-  categoryId: number;
+  declare categoryId: number;
 
   @Column({
     type: DataType.DATE,
@@ -66,14 +69,14 @@ export class Product extends Model {
     field: 'last_updated',
     defaultValue: DataType.NOW,
   })
-  lastUpdated: Date;
+  declare lastUpdated: Date;
 
   @HasMany(() => OrderItem)
-  orders: OrderItem[];
+  declare orders: OrderItem[];
 
   @HasMany(() => Comment)
-  comments: Comment[];
+  declare comments: Comment[];
 
   @BelongsTo(() => Category)
-  category: Category;
+  declare category: Category;
 }

@@ -38,20 +38,20 @@ export class Profile extends Model {
     allowNull: true,
     field: 'user_id',
   })
-  userId: number;
+  declare userId: number;
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  address: string;
+  declare address: string;
 
   @Column({
     type: DataType.TEXT,
     allowNull: true,
   })
-  phone: string;
+  declare phone: string;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 }

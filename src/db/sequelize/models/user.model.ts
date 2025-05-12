@@ -6,9 +6,9 @@ import {
   HasMany,
   DataType,
 } from 'sequelize-typescript';
-import { Profile } from './profile.model'; // path to the Profile model
-import { Order } from './order.model'; // path to the Order model
-import { Comment } from './comment.model'; // path to the Comment model
+import { Profile } from './profile.model';
+import { Order } from './order.model';
+import { Comment } from './comment.model';
 import { CreationOptional } from 'sequelize';
 
 @Table({ modelName: 'user', tableName: 'User' })
@@ -20,28 +20,28 @@ export class User extends Model {
     allowNull: false,
     unique: 'users_email_key',
   })
-  email: string;
+  declare email: string;
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'password_hash',
   })
-  passwordHash: string;
+  declare passwordHash: string;
 
   @Column({
     type: DataType.TEXT,
     allowNull: false,
     field: 'full_name',
   })
-  fullName: string;
+  declare fullName: string;
 
   @HasOne(() => Profile)
-  profile: Profile;
+  declare profile: Profile;
 
   @HasMany(() => Order)
-  orders: Order[];
+  declare orders: Order[];
 
   @HasMany(() => Comment)
-  comments: Comment[];
+  declare comments: Comment[];
 }

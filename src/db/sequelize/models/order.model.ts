@@ -39,32 +39,32 @@ export class Order extends Model {
     allowNull: false,
     field: 'user_id',
   })
-  userId: number;
+  declare userId: number;
 
   @Column({
-    type: DataType.ENUM('pending', 'shipped', 'delivered', 'cancelled', 'paid'),
+    type: DataType.ENUM(
+      'processing',
+      'confirmed',
+      'shipped',
+      'delivered',
+      'cancelled',
+      'returned',
+    ),
     allowNull: false,
-    defaultValue: 'pending',
+    defaultValue: 'processing',
   })
-  status: string;
+  declare status: string;
 
   @Column({
     type: DataType.DECIMAL,
     allowNull: false,
     field: 'total_price',
   })
-  totalPrice: string;
-
-  // @Column({
-  //   type: DataType.DATE,
-  //   allowNull: true,
-  //   field: 'created_at',
-  // })
-  // declare createdAt: Date;
+  declare totalPrice: string;
 
   @HasMany(() => OrderItem)
-  orderItems: OrderItem[];
+  declare orderItems: OrderItem[];
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 }

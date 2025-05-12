@@ -22,8 +22,8 @@ export class Category extends Model {
     type: DataType.TEXT,
     allowNull: false,
   })
-  name: string;
+  declare name: string;
 
   @HasMany(() => Product)
-  products: Product[];
+  declare products: Product[];
 }
