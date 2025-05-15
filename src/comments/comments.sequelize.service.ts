@@ -17,15 +17,12 @@ export class CommentsSequelizeService
 
   async getCommentTreeByIdDefault(id: number) {
     const result = await measureTime(async () => {
-      const comment = await this.commentModel.findByPk(id, {
-        logging: console.log,
-      });
+      const comment = await this.commentModel.findByPk(id, {});
       if (!comment) return null;
 
       const buildRecursively = async (parent: CommentModel): Promise<any> => {
         const children = await this.commentModel.findAll({
           where: { parentId: parent.id },
-          logging: console.log,
         });
 
         const childTrees = await Promise.all(

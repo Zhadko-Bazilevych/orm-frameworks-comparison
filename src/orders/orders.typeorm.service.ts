@@ -17,13 +17,11 @@ export class OrdersTypeOrmService implements IOrdersServiceImplementation {
 
   async getOrderDefault(id: number) {
     const result = measureTime(() => {
-      console.log('so, here i am starting');
       return this.orderRepository.findOne({
         where: { id },
         relations: ['orderItems'],
       }) as Promise<Order>;
     });
-    console.log('and thats all');
     return result;
   }
 

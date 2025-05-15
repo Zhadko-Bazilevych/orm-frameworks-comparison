@@ -15,7 +15,5 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: 'admin',
   database: 'test5_nest',
   entities: [User, Order, OrderItem, Profile, Product, Comment, Category],
-  logging: true,
-  logger: 'advanced-console',
   synchronize: true,
 };

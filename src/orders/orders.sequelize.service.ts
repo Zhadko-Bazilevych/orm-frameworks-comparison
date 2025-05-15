@@ -88,16 +88,13 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
 
   async confirmOrderDefault(orderId: number) {
     const sequelize = this.orderModel.sequelize!;
-    console.log('startHere', orderId);
     const result = measureTime(async () => {
       return sequelize.transaction(async (t) => {
         const order = await this.orderModel.findByPk(orderId, {
           include: [OrderItem],
           transaction: t,
-          logging: console.log,
           raw: false,
         });
-        console.log('ORDER: ', order);
         if (!order) {
           throw new Error('Order not found');
         }
@@ -105,9 +102,7 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
         for (const item of order.orderItems) {
           const product = await this.productModel.findByPk(item.productId, {
             transaction: t,
-            logging: console.log,
           });
-          console.log('PRODUCT: ', product);
           if (!product) {
             throw new Error(`Product with id ${item.productId} not found`);
           }
@@ -147,7 +142,6 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
           {
             type: QueryTypes.SELECT,
             transaction: t,
-            logging: console.log,
           },
         );
 
@@ -195,7 +189,6 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
             {
               bind: [newStock, item.productId],
               transaction: t,
-              logging: console.log,
             },
           );
         }
@@ -205,7 +198,6 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
           {
             bind: ['confirmed', orderId],
             transaction: t,
-            logging: console.log,
           },
         );
 
