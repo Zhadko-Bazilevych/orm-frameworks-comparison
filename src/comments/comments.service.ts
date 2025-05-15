@@ -3,6 +3,7 @@ import { BaseService } from 'src/utils/utils.service';
 import { ICommentsService } from 'src/comments/comments.types';
 import { CommentsSequelizeService } from 'src/comments/comments.sequelize.service';
 import { InterfaceToType } from 'src/utils/utils.types';
+import { CommentsTypeOrmService } from 'src/comments/comments.typeorm.service';
 
 export class CommentsService extends BaseService<
   InterfaceToType<ICommentsService>
@@ -10,9 +11,9 @@ export class CommentsService extends BaseService<
   constructor(
     @Inject(CommentsSequelizeService)
     commentsSequelizeService: CommentsSequelizeService,
-    // @Inject(CommentTypeOrmService)
-    // commentTypeOrmService: CommentTypeOrmService,
+    @Inject(CommentsTypeOrmService)
+    commentsTypeOrmService: CommentsTypeOrmService,
   ) {
-    super(commentsSequelizeService);
+    super(commentsSequelizeService, commentsTypeOrmService);
   }
 }

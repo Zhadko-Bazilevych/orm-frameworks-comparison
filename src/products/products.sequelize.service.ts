@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { Inject, Injectable } from '@nestjs/common';
 import { Product as ProductModel } from 'src/db/sequelize/models/product.model';
 import {
   IProductsServiceImplementation,
@@ -13,7 +12,8 @@ export class ProductsSequelizeService
   implements IProductsServiceImplementation
 {
   constructor(
-    @InjectModel(ProductModel) private productModel: typeof ProductModel,
+    @Inject('PRODUCT_MODEL_SEQUELIZE')
+    private productModel: typeof ProductModel,
   ) {}
 
   async getProductsDefault(filterData: ProductRequestBody) {

@@ -12,7 +12,7 @@ export class OrdersController {
     @Query('id') id: number,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<BaseResponse<Order | Order[]>> {
+  ): Promise<unknown> {
     return await this.ordersService.call(orm, 'getOrder', queryType, [id]);
   }
 
@@ -31,7 +31,7 @@ export class OrdersController {
     orderData: Order,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<BaseResponse<Order>> {
+  ): Promise<BaseResponse<unknown>> {
     const result = await this.ordersService.call(
       orm,
       'createOrder',

@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { Inject, Injectable } from '@nestjs/common';
 import { Optional, QueryTypes } from 'sequelize';
 import { OrderItem } from 'src/db/sequelize/models/order-item.model';
 import { Order as OrderModel } from 'src/db/sequelize/models/order.model';
@@ -15,8 +14,9 @@ import { measureTime } from 'src/utils/utils.helpers';
 @Injectable()
 export class OrdersSequelizeService implements IOrdersServiceImplementation {
   constructor(
-    @InjectModel(OrderModel) private orderModel: typeof OrderModel,
-    @InjectModel(ProductModel) private productModel: typeof ProductModel,
+    @Inject('ORDER_MODEL_SEQUELIZE') private orderModel: typeof OrderModel,
+    @Inject('PRODUCT_MODEL_SEQUELIZE')
+    private productModel: typeof ProductModel,
   ) {}
 
   async getOrderDefault(id: number) {

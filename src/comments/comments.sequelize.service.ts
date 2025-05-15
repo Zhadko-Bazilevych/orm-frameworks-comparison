@@ -1,19 +1,18 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { Inject, Injectable } from '@nestjs/common';
 import { Comment as CommentModel } from 'src/db/sequelize/models/comment.model';
 import {
   Comment,
   ICommentsServiceImplementation,
 } from 'src/comments/comments.types';
 import { measureTime } from 'src/utils/utils.helpers';
-import { User } from 'src/db/sequelize/models/user.model';
 
 @Injectable()
 export class CommentsSequelizeService
   implements ICommentsServiceImplementation
 {
   constructor(
-    @InjectModel(CommentModel) private commentModel: typeof CommentModel,
+    @Inject('COMMENT_MODEL_SEQUELIZE')
+    private commentModel: typeof CommentModel,
   ) {}
 
   async getCommentTreeByIdDefault(id: number) {
@@ -26,12 +25,6 @@ export class CommentsSequelizeService
       const buildRecursively = async (parent: CommentModel): Promise<any> => {
         const children = await this.commentModel.findAll({
           where: { parentId: parent.id },
-          include: [
-            {
-              model: User,
-              as: 'user',
-            },
-          ],
           logging: console.log,
         });
 
@@ -55,13 +48,8 @@ export class CommentsSequelizeService
     const result = await measureTime(async () => {
       const [commentRows] = await this.commentModel.sequelize!.query(
         `
-      SELECT "comment"."id", "comment"."user_id" AS "userId", 
-             "comment"."product_id" AS "productId", 
-             "comment"."parent_id" AS "parentId", 
-             "comment"."content", 
-             "comment"."created_at" AS "createdAt"
-      FROM "Comment" AS "comment"
-      WHERE "comment"."id" = '${id}'
+     SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" FROM "Comment" 
+AS "comment" WHERE "comment"."parent_id" = '${id}'
       `,
       );
 
@@ -71,20 +59,8 @@ export class CommentsSequelizeService
       const buildRecursively = async (parent: any): Promise<any> => {
         const [children] = await this.commentModel.sequelize!.query(
           `
-        SELECT "comment"."id", "comment"."user_id" AS "userId", 
-               "comment"."product_id" AS "productId", 
-               "comment"."parent_id" AS "parentId", 
-               "comment"."content", 
-               "comment"."created_at" AS "createdAt", 
-               "user"."id" AS "user.id", 
-               "user"."email" AS "user.email", 
-               "user"."password_hash" AS "user.passwordHash", 
-               "user"."full_name" AS "user.fullName", 
-               "user"."createdAt" AS "user.createdAt", 
-               "user"."updatedAt" AS "user.updatedAt"
-        FROM "Comment" AS "comment"
-        LEFT OUTER JOIN "User" AS "user" ON "comment"."user_id" = "user"."id"
-        WHERE "comment"."parent_id" = ${parent.id}
+        SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" FROM "Comment" 
+AS "comment" WHERE "comment"."parent_id" = ${parent.id}
         `,
         );
 

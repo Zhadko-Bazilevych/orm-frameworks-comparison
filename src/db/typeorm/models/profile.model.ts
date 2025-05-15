@@ -6,7 +6,7 @@ import {
   JoinColumn,
   Unique,
 } from 'typeorm';
-import { User } from './user.model';
+import { User } from 'src/db/typeorm/models/user.model';
 
 @Entity('Profile')
 @Unique(['userId'])
@@ -14,7 +14,7 @@ export class Profile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int', nullable: true })
+  @Column({ type: 'int', nullable: true, name: 'user_id' })
   userId: number;
 
   @Column({ type: 'text', nullable: true })
@@ -24,6 +24,6 @@ export class Profile {
   phone: string;
 
   @OneToOne(() => User, (user) => user.profile)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn({ name: 'user_id' })
   user: User;
 }

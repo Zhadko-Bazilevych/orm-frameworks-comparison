@@ -6,12 +6,18 @@ import {
   HasMany,
   DataType,
 } from 'sequelize-typescript';
-import { Profile } from './profile.model';
-import { Order } from './order.model';
-import { Comment } from './comment.model';
+import { Profile } from 'src/db/sequelize/models/profile.model';
+import { Order } from 'src/db/sequelize/models/order.model';
+import { Comment } from 'src/db/sequelize/models/comment.model';
 import { CreationOptional } from 'sequelize';
 
-@Table({ modelName: 'user', tableName: 'User' })
+@Table({
+  modelName: 'user',
+  tableName: 'User',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: false,
+})
 export class User extends Model {
   declare id: CreationOptional<number>;
 

@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { Inject, Injectable } from '@nestjs/common';
+// import { InjectModel } from '@nestjs/sequelize';
 import { Optional } from 'sequelize';
 import { User as UserModel } from 'src/db/sequelize/models/user.model';
 import { IUsersServiceImplementation, User } from 'src/users/users.types';
@@ -7,7 +7,9 @@ import { measureTime } from 'src/utils/utils.helpers';
 
 @Injectable()
 export class UsersSequelizeService implements IUsersServiceImplementation {
-  constructor(@InjectModel(UserModel) private userModel: typeof UserModel) {}
+  constructor(
+    @Inject('USER_MODEL_SEQUELIZE') private userModel: typeof UserModel,
+  ) {}
 
   async getUsersDefault() {
     const result = measureTime(() => {
@@ -19,7 +21,7 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async getUsersRaw() {
     const result = measureTime(async () => {
       const [userList] = (await this.userModel.sequelize!.query(
-        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at", "updatedAt" 
+        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at", "updatedAt"
         FROM "User" AS "user" LIMIT 100`,
       )) as [User[], number];
       return userList;

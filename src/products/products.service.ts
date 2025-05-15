@@ -3,6 +3,7 @@ import { BaseService } from 'src/utils/utils.service';
 import { IProductsService } from 'src/products/products.types';
 import { ProductsSequelizeService } from 'src/products/products.sequelize.service';
 import { InterfaceToType } from 'src/utils/utils.types';
+import { ProductsTypeOrmService } from 'src/products/products.typeorm.service';
 
 export class ProductsService extends BaseService<
   InterfaceToType<IProductsService>
@@ -10,9 +11,9 @@ export class ProductsService extends BaseService<
   constructor(
     @Inject(ProductsSequelizeService)
     productsSequelizeService: ProductsSequelizeService,
-    // @Inject(ProductTypeOrmService)
-    // productTypeOrmService: ProductTypeOrmService,
+    @Inject(ProductsTypeOrmService)
+    productsTypeOrmService: ProductsTypeOrmService,
   ) {
-    super(productsSequelizeService);
+    super(productsSequelizeService, productsTypeOrmService);
   }
 }

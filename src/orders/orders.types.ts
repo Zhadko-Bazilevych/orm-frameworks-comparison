@@ -54,7 +54,7 @@ export type ProductRaw = {
 };
 
 export interface IOrdersService {
-  getOrder(id: number): Promise<BaseResponse<Order | Order[]>>;
-  createOrder(body: Order): Promise<BaseResponse<Order>>;
+  getOrder(id: number): Promise<BaseResponse<unknown>>;
+  createOrder(body: Order): Promise<BaseResponse<unknown>>;
   confirmOrder(id: number): Promise<BaseResponse<boolean>>;
 }

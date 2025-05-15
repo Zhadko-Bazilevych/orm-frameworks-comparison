@@ -1,11 +1,11 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Category } from 'src/db/typeorm/category.model';
-import { OrderItem } from 'src/db/typeorm/order-item.model';
-import { Order } from 'src/db/typeorm/order.model';
-import { Product } from 'src/db/typeorm/product.model';
-import { Profile } from 'src/db/typeorm/profile.model';
-import { User } from 'src/db/typeorm/user.model';
-import { Comment } from 'src/db/typeorm/comment.model';
+import { Category } from 'src/db/typeorm/models/category.model';
+import { OrderItem } from 'src/db/typeorm/models/order-item.model';
+import { Order } from 'src/db/typeorm/models/order.model';
+import { Product } from 'src/db/typeorm/models/product.model';
+import { Profile } from 'src/db/typeorm/models/profile.model';
+import { User } from 'src/db/typeorm/models/user.model';
+import { Comment } from 'src/db/typeorm/models/comment.model';
 
 export const typeOrmConfig: TypeOrmModuleOptions = {
   type: 'postgres',
@@ -15,5 +15,7 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   password: 'admin',
   database: 'test5_nest',
   entities: [User, Order, OrderItem, Profile, Product, Comment, Category],
+  logging: true,
+  logger: 'advanced-console',
   synchronize: true,
 };

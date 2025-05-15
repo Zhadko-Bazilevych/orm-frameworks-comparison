@@ -15,5 +15,5 @@ export const sequelizeConfig: SequelizeModuleOptions = {
   password: 'admin',
   database: 'test5_nest',
   models: [User, Order, OrderItem, Profile, Product, Comment, Category],
-  autoLoadModels: false,
+  autoLoadModels: true,
 };

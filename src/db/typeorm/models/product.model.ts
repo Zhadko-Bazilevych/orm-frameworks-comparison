@@ -6,9 +6,9 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
-import { Category } from './category.model';
-import { OrderItem } from './order-item.model';
-import { Comment } from './comment.model';
+import { Category } from 'src/db/typeorm/models/category.model';
+import { OrderItem } from 'src/db/typeorm/models/order-item.model';
+import { Comment } from 'src/db/typeorm/models/comment.model';
 
 @Entity('Product')
 export class Product {
@@ -27,13 +27,20 @@ export class Product {
   @Column({ type: 'int', default: 0 })
   stock: number;
 
+  @Column({ type: 'int', name: 'category_id' })
+  categoryId: number;
+
   @ManyToOne(() => Category, (category) => category.products, {
     nullable: true,
   })
-  @JoinColumn({ name: 'categoryId' })
+  @JoinColumn({ name: 'category_id' })
   category: Category;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    name: 'last_updated',
+  })
   lastUpdated: Date;
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.product)
