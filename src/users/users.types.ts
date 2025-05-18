@@ -14,10 +14,8 @@ export type User = {
   fullName: string;
 };
 
-export type UsersFindAllResponse = BaseResponse<User[]>;
-
 export interface IUsersService {
-  getUsers(): Promise<UsersFindAllResponse>;
+  getUsers(): Promise<unknown>;
   deleteUser(id: number): Promise<BaseResponse<boolean>>;
   createUser(body: User): Promise<BaseResponse<User>>;
   updateUser(body: User): Promise<BaseResponse<User>>;

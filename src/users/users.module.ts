@@ -6,6 +6,8 @@ import { User as TypeOrmUserModel } from 'src/db/typeorm/models/user.model';
 import { UsersSequelizeService } from 'src/users/users.sequelize.service';
 import { UsersTypeOrmService } from 'src/users/users.typeorm.service';
 import { DataSource } from 'typeorm';
+import { UsersPrismaService } from 'src/users/users.prisma.service';
+import { PrismaService } from 'src/db/prisma/prisma.service';
 // import { Sequelize } from 'sequelize-typescript';
 
 @Module({
@@ -14,6 +16,8 @@ import { DataSource } from 'typeorm';
     UsersService,
     UsersSequelizeService,
     UsersTypeOrmService,
+    PrismaService,
+    UsersPrismaService,
 
     {
       provide: 'USER_REPOSITORY_TYPEORM',

@@ -8,9 +8,9 @@ import {
   Query,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
-import { User, UsersFindAllResponse } from 'src/users/users.types';
 import { BaseResponse, ORM, QueryType } from 'src/utils/utils.types';
 import * as bcrypt from 'bcrypt';
+import { User } from 'src/users/users.types';
 
 @Controller('users')
 export class UsersController {
@@ -20,7 +20,7 @@ export class UsersController {
   async findAll(
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<UsersFindAllResponse> {
+  ) {
     return await this.usersService.call(orm, 'getUsers', queryType, []);
   }
 

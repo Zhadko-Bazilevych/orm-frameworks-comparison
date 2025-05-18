@@ -12,6 +12,7 @@ export class BaseService<
   constructor(
     private readonly sequelizeOrmService?: GetServiceImplementation<Service>,
     private readonly typeOrmService?: GetServiceImplementation<Service>,
+    private readonly prismaOrmService?: GetServiceImplementation<Service>,
   ) {}
 
   call<Method extends Extract<keyof Service, string>>(
@@ -28,17 +29,18 @@ export class BaseService<
         }
         service = this.sequelizeOrmService;
         break;
-      // case 'prisma':
-      //   service = this.prismaService;
-      //   break;
+      case 'prisma':
+        if (!this.prismaOrmService) {
+          throw new Error('prisma service is not implemented');
+        }
+        service = this.prismaOrmService;
+        break;
       case 'typeorm':
         if (!this.typeOrmService) {
           throw new Error('typeOrm service is not implemented');
         }
         service = this.typeOrmService;
         break;
-      default:
-        throw new Error("can't find orm: " + orm);
     }
 
     switch (queryType) {

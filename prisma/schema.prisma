@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id      Int       @id(map: "PK_c2727780c5b9b0c564c29a4977c") @unique(map: "categories_pkey") @default(autoincrement())
+  name    String
+  product Product[]
+}
+
+model Comment {
+  id                                   Int       @id(map: "PK_fe8d6bf0fcb531dfa75f3fd5bdb") @unique(map: "comments_pkey") @default(autoincrement())
+  userId                               Int?      @map("user_id")
+  productId                            Int?      @map("product_id")
+  parentId                             Int?      @map("parent_id")
+  content                              String
+  createdAt                            DateTime? @map("created_at") @db.Timestamp(6)
+  user                                 User?     @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_35807048116cf822fd0ef9c0299")
+  commentCommentParentIdToComment      Comment?  @relation("Comment_parentIdToComment", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_3fb29200d14d53deb0d837d35a1")
+  otherCommentCommentParentIdToComment Comment[] @relation("Comment_parentIdToComment")
+  product                              Product?  @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_fba05ba2bd134515c137e0154d4")
+}
+
+model Order {
+  id         Int             @id(map: "PK_3d5a3861d8f9a6db372b2b317b7") @unique(map: "orders_pkey") @default(autoincrement())
+  userId     Int             @map("user_id")
+  status     OrderStatusEnum @default(processing) @map("status")
+  totalPrice Decimal         @map("total_price") @db.Decimal
+  createdAt  DateTime?       @map("created_at") @db.Timestamp(6)
+  user       User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_8a7c8fd5a1a997d18774b7f2b24")
+  orderItem  OrderItem[]
+
+  @@index([createdAt], map: "orders_created_at_idx")
+}
+
+model OrderItem {
+  id        Int     @id(map: "PK_5590ad10d14bbb04565b8b331c8") @default(autoincrement())
+  orderId   Int     @map("order_id")
+  productId Int     @map("product_id")
+  quantity  Int
+  price     Decimal @db.Decimal
+  product   Product @relation(fields: [productId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_165c38177d25a45bef1783569f2")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_c111abbe6a9fab08250278e0037")
+
+  @@unique([orderId, productId], map: "order_items_pkey")
+  @@map("Order_item")
+}
+
+model Product {
+  id          Int         @id(map: "PK_9fc040db7872192bbc26c515710") @unique(map: "products_pkey") @default(autoincrement())
+  name        String
+  description String?
+  price       Decimal     @db.Decimal
+  stock       Int         @default(0)
+  lastUpdated DateTime    @default(now()) @map("last_updated") @db.Timestamp(6)
+  categoryId  Int         @map("category_id")
+  comment     Comment[]
+  orderItem   OrderItem[]
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_f9b5114e0cfa9a3c5bdf606aedb")
+}
+
+model Profile {
+  id      Int     @id(map: "PK_89dff233f744d59758158aca1d7") @unique(map: "profiles_pkey") @default(autoincrement())
+  userId  Int?    @unique(map: "UQ_aa9eea01b147aad7a29806ab0e0") @map("user_id")
+  address String?
+  phone   String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_aa9eea01b147aad7a29806ab0e0")
+}
+
+model User {
+  id           Int       @id(map: "PK_9862f679340fb2388436a5ab3e4") @default(autoincrement())
+  email        String    @unique(map: "UQ_4a257d2c9837248d70640b3e36e")
+  passwordHash String    @map("password_hash")
+  fullName     String    @map("full_name")
+  createdAt    DateTime? @map("created_at") @db.Timestamp(6)
+  comment      Comment[]
+  order        Order[]
+  profile      Profile?
+}
+
+enum OrderStatusEnum {
+  processing
+  confirmed
+  shipped
+  delivered
+  cancelled
+  returned
+
+  @@map("Order_status_enum")
+}
+
+enum EnumOrderStatus {
+  processing
+  confirmed
+  shipped
+  delivered
+  cancelled
+  returned
+
+  @@map("enum_Order_status")
+}

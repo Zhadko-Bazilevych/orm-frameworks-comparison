@@ -21,7 +21,7 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async getUsersRaw() {
     const result = measureTime(async () => {
       const [userList] = (await this.userModel.sequelize!.query(
-        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at", "updatedAt"
+        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at"
         FROM "User" AS "user" LIMIT 100`,
       )) as [User[], number];
       return userList;
