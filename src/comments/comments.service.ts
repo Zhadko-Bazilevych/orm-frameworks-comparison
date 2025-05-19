@@ -4,6 +4,7 @@ import { ICommentsService } from 'src/comments/comments.types';
 import { CommentsSequelizeService } from 'src/comments/comments.sequelize.service';
 import { InterfaceToType } from 'src/utils/utils.types';
 import { CommentsTypeOrmService } from 'src/comments/comments.typeorm.service';
+import { CommentsPrismaService } from 'src/comments/comments.prisma.service';
 
 export class CommentsService extends BaseService<
   InterfaceToType<ICommentsService>
@@ -13,7 +14,13 @@ export class CommentsService extends BaseService<
     commentsSequelizeService: CommentsSequelizeService,
     @Inject(CommentsTypeOrmService)
     commentsTypeOrmService: CommentsTypeOrmService,
+    @Inject(CommentsPrismaService)
+    commentsPrismaService: CommentsPrismaService,
   ) {
-    super(commentsSequelizeService, commentsTypeOrmService);
+    super(
+      commentsSequelizeService,
+      commentsTypeOrmService,
+      commentsPrismaService,
+    );
   }
 }

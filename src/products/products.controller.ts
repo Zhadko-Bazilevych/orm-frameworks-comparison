@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Query } from '@nestjs/common';
 import { ProductsService } from 'src/products/products.service';
-import { Product } from 'src/products/products.types';
 import { BaseResponse, ORM, QueryType } from 'src/utils/utils.types';
 
 @Controller('products')
@@ -16,7 +15,7 @@ export class ProductsController {
     @Query('pageSize') pageSize: number,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<BaseResponse<Product | Product[]>> {
+  ): Promise<BaseResponse<unknown>> {
     return await this.productsService.call(orm, 'getProducts', queryType, [
       { categoryId, filterName, sortDirection, page, pageSize },
     ]);

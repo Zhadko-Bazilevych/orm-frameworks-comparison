@@ -8,9 +8,9 @@ datasource db {
 }
 
 model Category {
-  id      Int       @id(map: "PK_c2727780c5b9b0c564c29a4977c") @unique(map: "categories_pkey") @default(autoincrement())
-  name    String
-  product Product[]
+  id       Int       @id(map: "PK_c2727780c5b9b0c564c29a4977c") @unique(map: "categories_pkey") @default(autoincrement())
+  name     String
+  products Product[]
 }
 
 model Comment {
@@ -33,7 +33,7 @@ model Order {
   totalPrice Decimal         @map("total_price") @db.Decimal
   createdAt  DateTime?       @map("created_at") @db.Timestamp(6)
   user       User            @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_8a7c8fd5a1a997d18774b7f2b24")
-  orderItem  OrderItem[]
+  orderItems OrderItem[]
 
   @@index([createdAt], map: "orders_created_at_idx")
 }
@@ -60,7 +60,7 @@ model Product {
   lastUpdated DateTime    @default(now()) @map("last_updated") @db.Timestamp(6)
   categoryId  Int         @map("category_id")
   comment     Comment[]
-  orderItem   OrderItem[]
+  orderItems  OrderItem[]
   category    Category    @relation(fields: [categoryId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_f9b5114e0cfa9a3c5bdf606aedb")
 }
 
@@ -78,8 +78,8 @@ model User {
   passwordHash String    @map("password_hash")
   fullName     String    @map("full_name")
   createdAt    DateTime? @map("created_at") @db.Timestamp(6)
-  comment      Comment[]
-  order        Order[]
+  comments     Comment[]
+  orders       Order[]
   profile      Profile?
 }
 

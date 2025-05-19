@@ -26,7 +26,5 @@ export type ProductRequestBody = {
 };
 
 export interface IProductsService {
-  getProducts(
-    filterData: ProductRequestBody,
-  ): Promise<BaseResponse<Product | Product[]>>;
+  getProducts(filterData: ProductRequestBody): Promise<BaseResponse<unknown>>;
 }

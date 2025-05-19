@@ -8,6 +8,8 @@ import { Product as TypeOrmProductModel } from 'src/db/typeorm/models/product.mo
 import { OrdersSequelizeService } from 'src/orders/orders.sequelize.service';
 import { DataSource } from 'typeorm';
 import { OrdersTypeOrmService } from 'src/orders/orders.typeorm.service';
+import { OrdersPrismaService } from 'src/orders/orders.prisma.service';
+import { PrismaService } from 'src/db/prisma/prisma.service';
 
 @Module({
   controllers: [OrdersController],
@@ -15,6 +17,8 @@ import { OrdersTypeOrmService } from 'src/orders/orders.typeorm.service';
     OrdersService,
     OrdersSequelizeService,
     OrdersTypeOrmService,
+    PrismaService,
+    OrdersPrismaService,
     {
       provide: 'ORDER_REPOSITORY_TYPEORM',
       useFactory: (dataSource: DataSource) =>

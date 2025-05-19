@@ -6,6 +6,8 @@ import { Comment as TypeOrmCommentModel } from 'src/db/typeorm/models/comment.mo
 import { CommentsSequelizeService } from 'src/comments/comments.sequelize.service';
 import { DataSource } from 'typeorm';
 import { CommentsTypeOrmService } from 'src/comments/comments.typeorm.service';
+import { PrismaService } from 'src/db/prisma/prisma.service';
+import { CommentsPrismaService } from 'src/comments/comments.prisma.service';
 
 @Module({
   controllers: [CommentsController],
@@ -13,6 +15,8 @@ import { CommentsTypeOrmService } from 'src/comments/comments.typeorm.service';
     CommentsService,
     CommentsSequelizeService,
     CommentsTypeOrmService,
+    PrismaService,
+    CommentsPrismaService,
 
     {
       provide: 'COMMENT_REPOSITORY_TYPEORM',
