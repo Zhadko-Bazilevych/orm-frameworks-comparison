@@ -9,7 +9,7 @@ import {
   OrderItemRaw,
   ProductRaw,
 } from 'src/orders/orders.types';
-import { measureTime } from 'src/utils/utils.helpers';
+import { measureTime, sumExplainTimes } from 'src/utils/utils.helpers';
 
 @Injectable()
 export class OrdersSequelizeService implements IOrdersServiceImplementation {
@@ -45,6 +45,29 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
     return result;
   }
 
+  async getOrderExplain(id: number) {
+    const result = measureTime(async () => {
+      const [explain] = await this.orderModel.sequelize!.query(
+        `EXPLAIN (ANALYZE)
+       SELECT "order"."id", 
+              "order"."user_id" AS "userId", 
+              "order"."status", 
+              "order"."total_price" AS "totalPrice", 
+              "order"."created_at" AS "createdAt", 
+              "orderItems"."order_id" AS "orderItems.orderId", 
+              "orderItems"."product_id" AS "orderItems.productId", 
+              "orderItems"."quantity" AS "orderItems.quantity", 
+              "orderItems"."price" AS "orderItems.price" 
+       FROM "Order" AS "order" 
+       LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id" 
+       WHERE "order"."id" = '${id}'`,
+      );
+      return explain;
+    });
+
+    return result;
+  }
+
   async createOrderDefault(order: Optional<Order, 'id'>) {
     const result = measureTime(() => {
       return this.orderModel.create(order, {
@@ -68,12 +91,13 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
         },
       )) as [Order[], unknown];
       if (!order.orderItems) return newOrder;
+      const orderId = newOrder.id;
       for (const orderItem of order.orderItems) {
         await this.orderModel.sequelize!.query(
           `INSERT INTO "Order_item" ("order_id","product_id","quantity","price") VALUES ($1,$2,$3,$4) RETURNING "order_id","product_id","quantity","price";`,
           {
             bind: [
-              orderItem.orderId,
+              orderId,
               orderItem.productId,
               orderItem.quantity,
               orderItem.price,
@@ -83,6 +107,57 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
       }
       return newOrder;
     });
+    return result;
+  }
+
+  async createOrderExplain(order: Optional<Order, 'id'>) {
+    const result = await measureTime(async () => {
+      const orderQueryResult = await this.orderModel.sequelize!.query(
+        `EXPLAIN (ANALYZE) INSERT INTO "Order" ("id","user_id","status","total_price","created_at")
+       VALUES (DEFAULT,$1,$2,$3,$4)
+       RETURNING "id","user_id","status","total_price","created_at";`,
+        {
+          bind: [order.userId, order.status, order.totalPrice, new Date()],
+        },
+      );
+      const orderExplain = orderQueryResult[0] as { 'QUERY PLAN': string }[];
+
+      const [[newOrder]] = (await this.orderModel.sequelize!.query(
+        `INSERT INTO "Order" ("user_id","status","total_price","created_at")
+       VALUES ($1,$2,$3,$4)
+       RETURNING "id","user_id","status","total_price","created_at";`,
+        {
+          bind: [order.userId, order.status, order.totalPrice, new Date()],
+        },
+      )) as [Order[], unknown];
+
+      if (!order.orderItems || order.orderItems.length === 0) {
+        return sumExplainTimes(orderExplain);
+      }
+
+      const allItemExplains: { 'QUERY PLAN': string }[][] = [];
+
+      for (const orderItem of order.orderItems) {
+        const itemQueryResult = await this.orderModel.sequelize!.query(
+          `EXPLAIN (ANALYZE) INSERT INTO "Order_item" ("order_id","product_id","quantity","price")
+         VALUES ($1,$2,$3,$4)
+         RETURNING "order_id","product_id","quantity","price";`,
+          {
+            bind: [
+              newOrder.id,
+              orderItem.productId,
+              orderItem.quantity,
+              orderItem.price,
+            ],
+          },
+        );
+        const itemExplain = itemQueryResult[0] as { 'QUERY PLAN': string }[];
+        allItemExplains.push(itemExplain);
+      }
+
+      return sumExplainTimes(orderExplain, ...allItemExplains);
+    });
+
     return result;
   }
 
@@ -107,7 +182,7 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
             throw new Error(`Product with id ${item.productId} not found`);
           }
 
-          product.stock -= item.quantity;
+          product.stock += item.quantity;
 
           if (product.stock < 0) {
             throw new Error(
@@ -163,20 +238,20 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
         }
 
         for (const item of groupedItems.values()) {
-          const [products] = await sequelize.query<ProductRaw>(
+          const productRows = await sequelize.query<ProductRaw>(
             `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated" 
-           FROM "Product" AS "product" 
-           WHERE "product"."id" = ${item.productId};`,
+     FROM "Product" AS "product" 
+     WHERE "product"."id" = ${item.productId};`,
             { type: QueryTypes.SELECT, transaction: t },
           );
 
-          const product = products[0] as ProductRaw | undefined;
+          const product = productRows[0];
 
           if (!product) {
             throw new Error(`Product with id ${item.productId} not found`);
           }
 
-          const newStock = product.stock - item.quantity;
+          const newStock = product.stock + item.quantity;
 
           if (newStock < 0) {
             throw new Error(
@@ -202,6 +277,114 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
         );
 
         return true;
+      });
+    });
+
+    return result;
+  }
+
+  async confirmOrderExplain(orderId: number) {
+    const sequelize = this.orderModel.sequelize!;
+
+    const result = await measureTime(async () => {
+      return sequelize.transaction(async (t) => {
+        const ordersExplain = await sequelize.query(
+          `EXPLAIN (ANALYZE)
+         SELECT "order"."id", "order"."user_id" AS "userId", "order"."status", "order"."total_price" AS "totalPrice", "order"."created_at",
+                "orderItems"."order_id" AS "orderItems.orderId", "orderItems"."product_id" AS "orderItems.productId",
+                "orderItems"."quantity" AS "orderItems.quantity", "orderItems"."price" AS "orderItems.price"
+         FROM "Order" AS "order"
+         LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id"
+         WHERE "order"."id" = $1;`,
+          { bind: [orderId], transaction: t },
+        );
+
+        const orders: OrderItemRaw[] = await sequelize.query<OrderItemRaw>(
+          `SELECT "order"."id", "order"."user_id" AS "userId", "order"."status", "order"."total_price" AS "totalPrice", "order"."created_at",
+                "orderItems"."order_id" AS "orderItems.orderId", "orderItems"."product_id" AS "orderItems.productId",
+                "orderItems"."quantity" AS "orderItems.quantity", "orderItems"."price" AS "orderItems.price"
+         FROM "Order" AS "order"
+         LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id"
+         WHERE "order"."id" = $1;`,
+          { bind: [orderId], type: QueryTypes.SELECT, transaction: t },
+        );
+
+        const order = orders[0];
+        if (!order) throw new Error('Order not found');
+
+        const groupedItems = new Map<
+          number,
+          { productId: number; quantity: number }
+        >();
+        for (const item of orders) {
+          if (!item['orderItems.productId']) continue;
+          groupedItems.set(item['orderItems.productId'], {
+            productId: item['orderItems.productId'],
+            quantity: item['orderItems.quantity'],
+          });
+        }
+
+        const productExplains: { 'QUERY PLAN': string }[][] = [];
+        const updateStockExplains: { 'QUERY PLAN': string }[][] = [];
+
+        for (const item of groupedItems.values()) {
+          const productExplain = await sequelize.query(
+            `EXPLAIN (ANALYZE)
+           SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated"
+           FROM "Product" AS "product"
+           WHERE "product"."id" = $1;`,
+            { bind: [item.productId], transaction: t },
+          );
+          productExplains.push(productExplain[0] as { 'QUERY PLAN': string }[]);
+
+          const products: ProductRaw[] = await sequelize.query<ProductRaw>(
+            `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated"
+           FROM "Product" AS "product"
+           WHERE "product"."id" = $1;`,
+            { bind: [item.productId], type: QueryTypes.SELECT, transaction: t },
+          );
+
+          const product = products[0];
+          if (!product)
+            throw new Error(`Product with id ${item.productId} not found`);
+
+          const newStock = product.stock + item.quantity;
+          if (newStock < 0) {
+            throw new Error(
+              `Product with id ${product.id} have less than requires ${item.quantity} in stock (currently ${product.stock})`,
+            );
+          }
+
+          const updateStockExplain = await sequelize.query(
+            `EXPLAIN (ANALYZE) UPDATE "Product" SET "stock" = $1 WHERE "id" = $2;`,
+            { bind: [newStock, item.productId], transaction: t },
+          );
+          updateStockExplains.push(
+            updateStockExplain[0] as { 'QUERY PLAN': string }[],
+          );
+
+          await sequelize.query(
+            `UPDATE "Product" SET "stock" = $1 WHERE "id" = $2;`,
+            { bind: [newStock, item.productId], transaction: t },
+          );
+        }
+
+        const orderStatusExplain = await sequelize.query(
+          `EXPLAIN (ANALYZE) UPDATE "Order" SET "status" = $1 WHERE "id" = $2;`,
+          { bind: ['confirmed', orderId], transaction: t },
+        );
+
+        await sequelize.query(
+          `UPDATE "Order" SET "status" = $1 WHERE "id" = $2;`,
+          { bind: ['confirmed', orderId], transaction: t },
+        );
+
+        return sumExplainTimes(
+          ordersExplain[0] as { 'QUERY PLAN': string }[],
+          ...productExplains,
+          ...updateStockExplains,
+          orderStatusExplain[0] as { 'QUERY PLAN': string }[],
+        );
       });
     });
 

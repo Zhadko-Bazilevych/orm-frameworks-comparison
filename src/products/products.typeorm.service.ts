@@ -47,4 +47,30 @@ export class ProductsTypeOrmService implements IProductsServiceImplementation {
 
     return result;
   }
+
+  async getProductsExplain(filterData: ProductRequestBody) {
+    const dataSource = this.productRepository.manager.connection;
+    const offset = (filterData.pageSize - 1) * filterData.page;
+
+    const result = await measureTime(async () => {
+      const explain: unknown = await dataSource.query(
+        `EXPLAIN (ANALYZE)
+       SELECT "Product"."id" AS "Product_id",
+              "Product"."name" AS "Product_name",
+              "Product"."description" AS "Product_description",
+              "Product"."price" AS "Product_price",
+              "Product"."stock" AS "Product_stock",
+              "Product"."category_id" AS "Product_category_id",
+              "Product"."last_updated" AS "Product_last_updated"
+       FROM "Product" "Product"
+       WHERE "Product"."category_id" = $1
+       ORDER BY "Product"."name" ${filterData.sortDirection}
+       LIMIT ${filterData.pageSize} OFFSET ${offset}`,
+        [filterData.categoryId],
+      );
+      return explain;
+    });
+
+    return result;
+  }
 }

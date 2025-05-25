@@ -10,7 +10,6 @@ import {
 import { UsersService } from 'src/users/users.service';
 import { BaseResponse, ORM, QueryType } from 'src/utils/utils.types';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/users/users.types';
 
 @Controller('users')
 export class UsersController {
@@ -29,7 +28,7 @@ export class UsersController {
     @Query('id') id: number,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<BaseResponse<boolean>> {
+  ): Promise<BaseResponse<unknown>> {
     return await this.usersService.call(orm, 'deleteUser', queryType, [id]);
   }
 
@@ -39,7 +38,7 @@ export class UsersController {
     userData: { email: string; password: string; fullName: string },
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<BaseResponse<User>> {
+  ): Promise<BaseResponse<unknown>> {
     const hashedPassword = (await bcrypt.hash(userData.password, 10)) as string;
     const newUser = {
       email: userData.email,
@@ -58,7 +57,7 @@ export class UsersController {
     userData: { id: number; email: string; password: string; fullName: string },
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
-  ): Promise<BaseResponse<User>> {
+  ): Promise<BaseResponse<unknown>> {
     const hashedPassword = (await bcrypt.hash(userData.password, 10)) as string;
     const updatedUser = {
       id: userData.id,

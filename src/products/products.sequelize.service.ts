@@ -42,4 +42,21 @@ export class ProductsSequelizeService
 
     return result;
   }
+
+  async getProductsExplain(filterData: ProductRequestBody) {
+    const offset = (filterData.page - 1) * filterData.pageSize;
+    const result = measureTime(async () => {
+      const [explain] = await this.productModel.sequelize!.query(
+        `EXPLAIN (ANALYZE)
+       SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated"
+       FROM "Product" AS "product"
+       WHERE "product"."category_id" = '${filterData.categoryId}'
+       ORDER BY "product"."name" ASC
+       LIMIT '${filterData.pageSize}' OFFSET ${offset};`,
+      );
+      return explain;
+    });
+
+    return result;
+  }
 }

@@ -53,4 +53,25 @@ export class ProductsPrismaService implements IProductsServiceImplementation {
 
     return result;
   }
+
+  async getProductsExplain(filterData: ProductRequestBody) {
+    const offset = (filterData.page - 1) * filterData.pageSize;
+    const categoryId = Number(filterData.categoryId);
+    const limit = Number(filterData.pageSize);
+    const direction = filterData.sortDirection.toLowerCase();
+
+    const result = await measureTime(async () => {
+      const explain = await this.prisma.$queryRawUnsafe(`
+      EXPLAIN (ANALYZE)
+      SELECT "id", "name", "description", "price", "stock", "last_updated", "category_id"
+      FROM "public"."Product"
+      WHERE "category_id" = ${categoryId}
+      ORDER BY "name" ${direction}
+      LIMIT ${limit} OFFSET ${offset}
+    `);
+      return explain;
+    });
+
+    return result;
+  }
 }

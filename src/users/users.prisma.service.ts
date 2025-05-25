@@ -34,6 +34,22 @@ export class UsersPrismaService implements IUsersServiceImplementation {
     return result;
   }
 
+  async getUsersExplain() {
+    const result = await measureTime(async () => {
+      const explain = await this.prisma.$queryRawUnsafe(`
+      EXPLAIN (ANALYZE)
+      SELECT "public"."User"."id", "public"."User"."email", "public"."User"."password_hash", 
+             "public"."User"."full_name", "public"."User"."created_at"
+      FROM "public"."User"
+      WHERE 1=1
+      ORDER BY "public"."User"."id" ASC
+      LIMIT 100 OFFSET 0
+    `);
+      return explain;
+    });
+    return result;
+  }
+
   async deleteUserDefault(id: number) {
     const result = measureTime(async () => {
       const deletedUser = (await this.prisma.user.delete({
@@ -65,6 +81,26 @@ export class UsersPrismaService implements IUsersServiceImplementation {
     return result;
   }
 
+  async deleteUserExplain(id: number | string) {
+    const numericId = Number(id);
+
+    const result = await measureTime(async () => {
+      const explain = await this.prisma.$queryRawUnsafe(`
+      EXPLAIN (ANALYZE)
+      DELETE FROM "public"."User"
+      WHERE ("public"."User"."id" = ${numericId} AND 1=1)
+      RETURNING "public"."User"."id",
+                "public"."User"."email",
+                "public"."User"."password_hash",
+                "public"."User"."full_name",
+                "public"."User"."created_at"
+    `);
+      return explain;
+    });
+
+    return result;
+  }
+
   async createUserDefault(user: Optional<User, 'id'>) {
     const result = measureTime(() => {
       return this.prisma.user.create({
@@ -84,6 +120,21 @@ export class UsersPrismaService implements IUsersServiceImplementation {
                 "public"."User"."created_at"
     `;
       return createdUser;
+    });
+    return result;
+  }
+
+  async createUserExplain(user: Optional<User, 'id'>) {
+    const result = await measureTime(async () => {
+      const explain = await this.prisma.$queryRawUnsafe(`
+      EXPLAIN (ANALYZE)
+      INSERT INTO "public"."User" ("email", "password_hash", "full_name")
+      VALUES ('${user.email}', '${user.passwordHash}', '${user.fullName}')
+      RETURNING "public"."User"."id", "public"."User"."email", 
+                "public"."User"."password_hash", "public"."User"."full_name", 
+                "public"."User"."created_at"
+    `);
+      return explain;
     });
     return result;
   }
@@ -114,6 +165,27 @@ export class UsersPrismaService implements IUsersServiceImplementation {
                 "public"."User"."created_at"
     `;
       return updatedUser;
+    });
+    return result;
+  }
+
+  async updateUserExplain(user: User) {
+    const result = await measureTime(async () => {
+      const explain = await this.prisma.$queryRawUnsafe(`
+      EXPLAIN (ANALYZE)
+      UPDATE "public"."User"
+      SET "id" = ${user.id}, 
+          "email" = '${user.email}', 
+          "password_hash" = '${user.passwordHash}', 
+          "full_name" = '${user.fullName}'
+      WHERE ("public"."User"."id" = ${user.id} AND 1=1)
+      RETURNING "public"."User"."id", 
+                "public"."User"."email", 
+                "public"."User"."password_hash", 
+                "public"."User"."full_name", 
+                "public"."User"."created_at"
+    `);
+      return explain;
     });
     return result;
   }

@@ -48,6 +48,8 @@ export class BaseService<
         return service[method + 'Raw'](...params);
       case 'default':
         return service[method + 'Default'](...params);
+      case 'explain':
+        return service[method + 'Explain'](...params);
       default:
         throw new Error("can't find method: " + method);
     }

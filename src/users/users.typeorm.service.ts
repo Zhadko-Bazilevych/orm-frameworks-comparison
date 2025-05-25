@@ -38,6 +38,23 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
     return result;
   }
 
+  async getUsersExplain() {
+    const dataSource = this.userRepository.manager.connection;
+    const result = await measureTime(async () => {
+      return dataSource.query(`
+      EXPLAIN (ANALYZE)
+      SELECT "User"."id" AS "User_id",
+             "User"."email" AS "User_email",
+             "User"."password_hash" AS "User_password_hash",
+             "User"."full_name" AS "User_full_name",
+             "User"."created_at" AS "User_created_at"
+      FROM "User" "User"
+      LIMIT 100
+    `);
+    });
+    return result;
+  }
+
   async deleteUserDefault(id: number) {
     const result = measureTime(async () => {
       const deleteResult = await this.userRepository.delete(id);
@@ -54,6 +71,19 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
         [`${id}`],
       );
       return !!response;
+    });
+
+    return result;
+  }
+
+  async deleteUserExplain(id: number) {
+    const dataSource = this.userRepository.manager.connection;
+    const result = await measureTime(async () => {
+      const explain: unknown = await dataSource.query(
+        `EXPLAIN (ANALYZE) DELETE FROM "User" WHERE "id" IN ($1)`,
+        [id],
+      );
+      return explain;
     });
 
     return result;
@@ -81,6 +111,30 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
     return result;
   }
 
+  async createUserExplain(user: User) {
+    const dataSource = this.userRepository.manager.connection;
+
+    const explainResult = await measureTime(async () => {
+      const explain: unknown = await dataSource.query(
+        `EXPLAIN (ANALYZE)
+       INSERT INTO "User" ("email", "password_hash", "full_name", "created_at")
+       VALUES ($1, $2, $3, DEFAULT)
+       RETURNING "id"`,
+        [user.email, user.passwordHash, user.fullName],
+      );
+      return explain;
+    });
+
+    await dataSource.query(
+      `INSERT INTO "User" ("email", "password_hash", "full_name", "created_at")
+       VALUES ($1, $2, $3, DEFAULT)
+       RETURNING "id", "email", "password_hash", "full_name", "created_at"`,
+      [user.email, user.passwordHash, user.fullName],
+    );
+
+    return explainResult;
+  }
+
   async updateUserDefault(user: User) {
     const result = await measureTime(async () => {
       await this.userRepository.update(user.id!, user);
@@ -101,6 +155,22 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
         [user.id, user.email, user.passwordHash, user.fullName, user.id],
       );
       return response;
+    });
+
+    return result;
+  }
+
+  async updateUserExplain(user: User) {
+    const dataSource = this.userRepository.manager.connection;
+    const result = await measureTime(async () => {
+      const explain: unknown = await dataSource.query(
+        `EXPLAIN (ANALYZE)
+       UPDATE "User"
+       SET "id" = $1, "email" = $2, "password_hash" = $3, "full_name" = $4
+       WHERE "id" IN ($5)`,
+        [user.id, user.email, user.passwordHash, user.fullName, user.id],
+      );
+      return explain;
     });
 
     return result;

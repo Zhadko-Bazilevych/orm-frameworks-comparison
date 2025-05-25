@@ -24,3 +24,14 @@ export type Comment = {
 export interface ICommentsService {
   getCommentTreeById(parentCommentId: number): Promise<BaseResponse<Comment>>;
 }
+
+export type DimonComment = {
+  id: number;
+  parentId: number | null;
+  content: string;
+  createdAt: Date;
+};
+
+export type DimonCommentTree = DimonComment & {
+  children: DimonComment[];
+};
