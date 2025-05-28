@@ -15,7 +15,7 @@ export type User = {
 };
 
 export interface IUsersService {
-  getUsers(): Promise<BaseResponse<unknown>>;
+  getUser(): Promise<BaseResponse<unknown>>;
   deleteUser(id: number): Promise<BaseResponse<unknown>>;
   createUser(body: User): Promise<BaseResponse<unknown>>;
   updateUser(body: User): Promise<BaseResponse<unknown>>;

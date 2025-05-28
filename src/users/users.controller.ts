@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  Param,
   Post,
   Put,
   Query,
@@ -10,17 +11,27 @@ import {
 import { UsersService } from 'src/users/users.service';
 import { BaseResponse, ORM, QueryType } from 'src/utils/utils.types';
 import * as bcrypt from 'bcrypt';
+import { UsersPrismaService } from 'src/users/users.prisma.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly userPrismaService: UsersPrismaService,
+  ) {}
 
   @Get()
-  async findAll(
+  async findAll(@Query('limit') limit: number) {
+    return await this.userPrismaService.getUsersDefault(limit);
+  }
+
+  @Get(':id')
+  async getOne(
+    @Param('id') id: number,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ) {
-    return await this.usersService.call(orm, 'getUsers', queryType, []);
+    return await this.usersService.call(orm, 'getUser', queryType, []);
   }
 
   @Delete()

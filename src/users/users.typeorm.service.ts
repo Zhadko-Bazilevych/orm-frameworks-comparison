@@ -11,17 +11,25 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
     private userRepository: Repository<UserEntity>,
   ) {}
 
-  async getUsersDefault() {
+  async getUsersDefault(limit: number) {
+    return this.userRepository.find({
+      order: { id: 'DESC' },
+      take: limit,
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  async getUserDefault(id: number) {
     const result = await measureTime(async () => {
-      return this.userRepository.find({
-        take: 100,
-      });
+      return this.userRepository.findOneBy({ id });
     });
 
     return result;
   }
 
-  async getUsersRaw() {
+  async getUserRaw() {
     const dataSource = this.userRepository.manager.connection;
     const result = await measureTime(async () => {
       return dataSource.query(
@@ -38,7 +46,7 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
     return result;
   }
 
-  async getUsersExplain() {
+  async getUserExplain() {
     const dataSource = this.userRepository.manager.connection;
     const result = await measureTime(async () => {
       return dataSource.query(`

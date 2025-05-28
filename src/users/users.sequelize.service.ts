@@ -11,14 +11,14 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
     @Inject('USER_MODEL_SEQUELIZE') private userModel: typeof UserModel,
   ) {}
 
-  async getUsersDefault() {
+  async getUserDefault(id: number) {
     const result = measureTime(() => {
-      return this.userModel.findAll({ limit: 100 });
+      return this.userModel.findByPk(id);
     });
     return result;
   }
 
-  async getUsersRaw() {
+  async getUserRaw() {
     const result = measureTime(async () => {
       const [userList] = (await this.userModel.sequelize!.query(
         `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at"
@@ -29,7 +29,7 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
     return result;
   }
 
-  async getUsersExplain() {
+  async getUserExplain() {
     const result = measureTime(async () => {
       const [explain] = await this.userModel.sequelize!.query(
         `EXPLAIN (ANAlYZE) SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at"

@@ -9,16 +9,30 @@ import { measureTime } from 'src/utils/utils.helpers';
 export class UsersPrismaService implements IUsersServiceImplementation {
   constructor(private prisma: PrismaService) {}
 
-  async getUsersDefault() {
+  async getUsersDefault(limit: number) {
+    return this.prisma.user.findMany({
+      orderBy: {
+        id: 'desc',
+      },
+      take: Number(limit),
+      select: {
+        id: true,
+      },
+    });
+  }
+
+  async getUserDefault(id: number) {
     const result = measureTime(() => {
-      return this.prisma.user.findMany({
-        take: 100,
+      return this.prisma.user.findUnique({
+        where: {
+          id: Number(id),
+        },
       });
     });
     return result;
   }
 
-  async getUsersRaw() {
+  async getUserRaw() {
     const result = await measureTime(async () => {
       const userList = await this.prisma.$queryRaw`
   SELECT "public"."User"."id", "public"."User"."email", "public"."User"."password_hash", 
@@ -34,7 +48,7 @@ export class UsersPrismaService implements IUsersServiceImplementation {
     return result;
   }
 
-  async getUsersExplain() {
+  async getUserExplain() {
     const result = await measureTime(async () => {
       const explain = await this.prisma.$queryRawUnsafe(`
       EXPLAIN (ANALYZE)
