@@ -51,7 +51,7 @@ export class OrderItem extends Model {
     type: DataType.DECIMAL,
     allowNull: false,
   })
-  declare price: string;
+  declare price: number;
 
   @BelongsTo(() => Order)
   declare order: Order;

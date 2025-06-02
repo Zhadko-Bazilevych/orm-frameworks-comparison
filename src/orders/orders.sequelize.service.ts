@@ -37,7 +37,10 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
     const result = measureTime(async () => {
       const res = (await this.orderModel.sequelize!.query(
         `SELECT "order"."id", "order"."user_id" AS "userId", "order"."status", "order"."total_price" AS "totalPrice", "order"."created_at" AS "createdAt", "orderItems"."order_id" AS "orderItems.orderId", "orderItems"."product_id" AS "orderItems.productId", "orderItems"."quantity" AS "orderItems.quantity", "orderItems"."price" AS "orderItems.price" FROM "Order" AS "order" LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id" WHERE "order"."id" 
-        = '${id}'`,
+        = $1`,
+        {
+          bind: [id],
+        },
       )) as [Order[], number];
 
       return res[0];
@@ -60,7 +63,10 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
               "orderItems"."price" AS "orderItems.price" 
        FROM "Order" AS "order" 
        LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id" 
-       WHERE "order"."id" = '${id}'`,
+       WHERE "order"."id" = $1`,
+        {
+          bind: [id],
+        },
       );
       return explain;
     });
@@ -213,8 +219,9 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
           "orderItems"."quantity" AS "orderItems.quantity", "orderItems"."price" AS "orderItems.price" 
    FROM "Order" AS "order" 
    LEFT OUTER JOIN "Order_item" AS "orderItems" ON "order"."id" = "orderItems"."order_id" 
-   WHERE "order"."id" = '${orderId}';`,
+   WHERE "order"."id" = $1;`,
           {
+            bind: [orderId],
             type: QueryTypes.SELECT,
             transaction: t,
           },
@@ -241,8 +248,8 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
           const productRows = await sequelize.query<ProductRaw>(
             `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated" 
      FROM "Product" AS "product" 
-     WHERE "product"."id" = ${item.productId};`,
-            { type: QueryTypes.SELECT, transaction: t },
+     WHERE "product"."id" = $1;`,
+            { bind: [item.productId], type: QueryTypes.SELECT, transaction: t },
           );
 
           const product = productRows[0];

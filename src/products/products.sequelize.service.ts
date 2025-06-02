@@ -35,7 +35,15 @@ export class ProductsSequelizeService
     const offset = (filterData.page - 1) * filterData.pageSize;
     const result = measureTime(async () => {
       const [updatedUser] = (await this.productModel.sequelize!.query(
-        `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated" FROM "Product" AS "product" WHERE "product"."category_id" = '${filterData.categoryId}' ORDER BY "product"."name" ASC LIMIT '${filterData.pageSize}' OFFSET ${offset};`,
+        `SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", 
+        "last_updated" AS "lastUpdated" FROM "Product" AS "product" 
+        WHERE "product"."category_id" = $1
+        ORDER BY "product"."name" ASC 
+        LIMIT $2 
+        OFFSET $3;`,
+        {
+          bind: [filterData.categoryId, filterData.pageSize, offset],
+        },
       )) as [Product[], unknown];
       return updatedUser;
     });
@@ -50,9 +58,12 @@ export class ProductsSequelizeService
         `EXPLAIN (ANALYZE)
        SELECT "id", "name", "description", "price", "stock", "category_id" AS "categoryId", "last_updated" AS "lastUpdated"
        FROM "Product" AS "product"
-       WHERE "product"."category_id" = '${filterData.categoryId}'
+       WHERE "product"."category_id" = $1
        ORDER BY "product"."name" ASC
-       LIMIT '${filterData.pageSize}' OFFSET ${offset};`,
+       LIMIT $2 OFFSET $3;`,
+        {
+          bind: [filterData.categoryId, filterData.pageSize, offset],
+        },
       );
       return explain;
     });

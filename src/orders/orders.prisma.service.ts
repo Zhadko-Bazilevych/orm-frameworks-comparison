@@ -148,7 +148,7 @@ export class OrdersPrismaService implements IOrdersServiceImplementation {
       }
 
       const values: string[] = [];
-      const params: any[] = [];
+      const params: number[] = [];
       let idx = 1;
 
       for (const item of order.orderItems) {
@@ -203,7 +203,7 @@ export class OrdersPrismaService implements IOrdersServiceImplementation {
       }
 
       const values: string[] = [];
-      const params: any[] = [];
+      const params: number[] = [];
       let idx = 1;
 
       for (const item of order.orderItems) {

@@ -9,7 +9,7 @@ export class CommentsController {
 
   @Get()
   async getCommentTreeById(
-    @Query('commentId') commentId: number,
+    @Query('commentId') commentId: string,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ): Promise<BaseResponse<Comment>> {
@@ -17,7 +17,7 @@ export class CommentsController {
       orm,
       'getCommentTreeById',
       queryType,
-      [commentId],
+      [Number(commentId)],
     );
   }
 }

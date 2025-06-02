@@ -8,16 +8,22 @@ export class ProductsController {
 
   @Get()
   async getProducts(
-    @Query('categoryId') categoryId: number,
+    @Query('categoryId') categoryId: string,
     @Query('filterName') filterName: string,
     @Query('sortDirection') sortDirection: 'ASC' | 'DESC',
-    @Query('page') page: number,
-    @Query('pageSize') pageSize: number,
+    @Query('page') page: string,
+    @Query('pageSize') pageSize: string,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ): Promise<BaseResponse<unknown>> {
     return await this.productsService.call(orm, 'getProducts', queryType, [
-      { categoryId, filterName, sortDirection, page, pageSize },
+      {
+        categoryId: Number(categoryId),
+        filterName,
+        sortDirection,
+        page: Number(page),
+        pageSize: Number(pageSize),
+      },
     ]);
   }
 }

@@ -29,36 +29,28 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
     return result;
   }
 
-  async getUserRaw() {
+  async getUserRaw(id: number) {
     const dataSource = this.userRepository.manager.connection;
     const result = await measureTime(async () => {
       return dataSource.query(
-        `SELECT "User"."id" AS "User_id",
-            "User"."email" AS "User_email",
-            "User"."password_hash" AS "User_password_hash",
-            "User"."full_name" AS "User_full_name",
-            "User"."created_at" AS "User_created_at"
-     FROM "User" "User"
-     LIMIT 100`,
+        `SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password_hash" AS "User_password_hash", "User"."full_name" AS "User_full_name", "User"."created_at" AS "User_created_at" FROM "User" "User" WHERE (("User"."id" = $1)) LIMIT 1`,
+        [id],
       );
     });
 
     return result;
   }
 
-  async getUserExplain() {
+  async getUserExplain(id: number) {
     const dataSource = this.userRepository.manager.connection;
     const result = await measureTime(async () => {
-      return dataSource.query(`
+      return dataSource.query(
+        `
       EXPLAIN (ANALYZE)
-      SELECT "User"."id" AS "User_id",
-             "User"."email" AS "User_email",
-             "User"."password_hash" AS "User_password_hash",
-             "User"."full_name" AS "User_full_name",
-             "User"."created_at" AS "User_created_at"
-      FROM "User" "User"
-      LIMIT 100
-    `);
+      SELECT "User"."id" AS "User_id", "User"."email" AS "User_email", "User"."password_hash" AS "User_password_hash", "User"."full_name" AS "User_full_name", "User"."created_at" AS "User_created_at" FROM "User" "User" WHERE (("User"."id" = $1)) LIMIT 1
+    `,
+        [id],
+      );
     });
     return result;
   }
@@ -76,7 +68,7 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
     const result = await measureTime(async () => {
       const response: [[], number] = await dataSource.query(
         `DELETE FROM "User" WHERE "id" IN ($1)`,
-        [`${id}`],
+        [id],
       );
       return !!response;
     });
@@ -132,13 +124,6 @@ export class UsersTypeOrmService implements IUsersServiceImplementation {
       );
       return explain;
     });
-
-    await dataSource.query(
-      `INSERT INTO "User" ("email", "password_hash", "full_name", "created_at")
-       VALUES ($1, $2, $3, DEFAULT)
-       RETURNING "id", "email", "password_hash", "full_name", "created_at"`,
-      [user.email, user.passwordHash, user.fullName],
-    );
 
     return explainResult;
   }

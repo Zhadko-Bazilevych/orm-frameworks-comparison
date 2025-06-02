@@ -158,14 +158,10 @@ export class OrdersTypeOrmService implements IOrdersServiceImplementation {
         paramIndex += 4;
       }
 
-      const itemsQuery = `
-      INSERT INTO "Order_item"("order_id", "product_id", "quantity", "price")
-      VALUES ${values.join(', ')}
-      RETURNING "id";
-    `;
-
       const explainItemsInsert = (await dataSource.query(
-        `EXPLAIN (ANALYZE) ${itemsQuery}`,
+        `EXPLAIN (ANALYZE) INSERT INTO "Order_item"("order_id", "product_id", "quantity", "price")
+      VALUES ${values.join(', ')}
+      RETURNING "id";`,
         parameters,
       )) as { 'QUERY PLAN': string }[];
 

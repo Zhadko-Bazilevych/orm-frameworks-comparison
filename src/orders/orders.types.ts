@@ -28,7 +28,7 @@ export type OrderItem = {
   orderId: number;
   productId: number;
   quantity: number;
-  price: string;
+  price: number;
 };
 
 export type OrderItemRaw = {

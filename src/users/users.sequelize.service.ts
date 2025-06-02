@@ -18,22 +18,26 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
     return result;
   }
 
-  async getUserRaw() {
+  async getUserRaw(id: number) {
     const result = measureTime(async () => {
       const [userList] = (await this.userModel.sequelize!.query(
-        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at"
-        FROM "User" AS "user" LIMIT 100`,
+        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at" FROM "User" AS "user" WHERE "user"."id" = '$1';`,
+        {
+          bind: [id],
+        },
       )) as [User[], number];
       return userList;
     });
     return result;
   }
 
-  async getUserExplain() {
+  async getUserExplain(id: number) {
     const result = measureTime(async () => {
       const [explain] = await this.userModel.sequelize!.query(
-        `EXPLAIN (ANAlYZE) SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at"
-        FROM "User" AS "user" LIMIT 100`,
+        `EXPLAIN (ANAlYZE) SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at" FROM "User" AS "user" WHERE "user"."id" = '$1';`,
+        {
+          bind: [id],
+        },
       );
       return explain;
     });
@@ -51,7 +55,10 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async deleteUserRaw(id: number) {
     const result = measureTime(async () => {
       const [deletedCount] = await this.userModel.sequelize!.query(
-        `DELETE FROM "User" WHERE "id" = ${id}`,
+        `DELETE FROM "User" WHERE "id" = $1`,
+        {
+          bind: [id],
+        },
       );
       return !!deletedCount;
     });
@@ -61,7 +68,10 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async deleteUserExplain(id: number) {
     const result = measureTime(async () => {
       const [explain] = await this.userModel.sequelize!.query(
-        `EXPLAIN (ANALYZE) DELETE FROM "User" WHERE "id" = ${id}`,
+        `EXPLAIN (ANALYZE) DELETE FROM "User" WHERE "id" = $1`,
+        {
+          bind: [id],
+        },
       );
       return explain;
     });
@@ -76,13 +86,14 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   }
 
   async createUserRaw(user: Optional<User, 'id'>) {
+    const curentDate = new Date();
     const result = measureTime(async () => {
       const [[newUser]] = (await this.userModel.sequelize!.query(
         `INSERT INTO "User" ("id", "email", "password_hash", "full_name", "created_at")
          VALUES (DEFAULT, $1, $2, $3, $4)
          RETURNING "id", "email", "password_hash", "full_name", "created_at";`,
         {
-          bind: [user.email, user.passwordHash, user.fullName, new Date()],
+          bind: [user.email, user.passwordHash, user.fullName, curentDate],
         },
       )) as [User[], unknown];
       return newUser;
@@ -103,15 +114,6 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
       );
       return explain;
     });
-
-    await this.userModel.sequelize!.query(
-      `INSERT INTO "User" ("id", "email", "password_hash", "full_name", "created_at")
-       VALUES (DEFAULT, $1, $2, $3, $4)
-       RETURNING "id", "email", "password_hash", "full_name", "created_at";`,
-      {
-        bind: [user.email, user.passwordHash, user.fullName, new Date()],
-      },
-    );
 
     return explainResult;
   }

@@ -43,7 +43,7 @@ export class OrdersController {
 
   @Put()
   async confirmOrder(
-    @Query('orderId') orderId: number,
+    @Query('orderId') orderId: string,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ): Promise<BaseResponse<boolean>> {
@@ -51,7 +51,7 @@ export class OrdersController {
       orm,
       'confirmOrder',
       queryType,
-      [orderId],
+      [Number(orderId)],
     );
     return result;
   }

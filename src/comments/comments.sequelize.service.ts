@@ -46,8 +46,10 @@ export class CommentsSequelizeService
       const [commentRows] = await this.commentModel.sequelize!.query(
         `
      SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" FROM "Comment" 
-AS "comment" WHERE "comment"."parent_id" = '${id}'
-      `,
+AS "comment" WHERE "comment"."parent_id" = $1`,
+        {
+          bind: [id],
+        },
       );
 
       const root = commentRows[0];
@@ -57,8 +59,10 @@ AS "comment" WHERE "comment"."parent_id" = '${id}'
         const [children] = await this.commentModel.sequelize!.query(
           `
         SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" FROM "Comment" 
-AS "comment" WHERE "comment"."parent_id" = ${parent.id}
-        `,
+AS "comment" WHERE "comment"."parent_id" = $1`,
+          {
+            bind: [parent.id],
+          },
         );
 
         const childrenWithSub = await Promise.all(
@@ -85,16 +89,20 @@ AS "comment" WHERE "comment"."parent_id" = ${parent.id}
         `
       EXPLAIN (ANALYZE)
       SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" 
-      FROM "Comment" AS "comment" WHERE "comment"."parent_id" = '${id}'
-      `,
+      FROM "Comment" AS "comment" WHERE "comment"."parent_id" = $1`,
+        {
+          bind: [id],
+        },
       )) as [unknown[], unknown];
       explains.push(rootExplainRaw as { 'QUERY PLAN': string }[]);
 
       const [commentRows] = await this.commentModel.sequelize!.query(
         `
       SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" 
-      FROM "Comment" AS "comment" WHERE "comment"."parent_id" = '${id}'
-      `,
+      FROM "Comment" AS "comment" WHERE "comment"."parent_id" = $1`,
+        {
+          bind: [id],
+        },
       );
 
       const root = (commentRows as unknown[])[0];
@@ -105,16 +113,20 @@ AS "comment" WHERE "comment"."parent_id" = ${parent.id}
           `
         EXPLAIN (ANALYZE)
         SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" 
-        FROM "Comment" AS "comment" WHERE "comment"."parent_id" = ${parent.id}
-        `,
+        FROM "Comment" AS "comment" WHERE "comment"."parent_id" = $1`,
+          {
+            bind: [parent.id],
+          },
         )) as [unknown[], unknown];
         explains.push(explainRaw as { 'QUERY PLAN': string }[]);
 
         const [children] = await this.commentModel.sequelize!.query(
           `
         SELECT "id", "user_id" AS "userId", "product_id" AS "productId", "parent_id" AS "parentId", "content", "created_at" AS "createdAt" 
-        FROM "Comment" AS "comment" WHERE "comment"."parent_id" = ${parent.id}
-        `,
+        FROM "Comment" AS "comment" WHERE "comment"."parent_id" = $1`,
+          {
+            bind: [parent.id],
+          },
         );
 
         const childrenWithSub = await Promise.all(

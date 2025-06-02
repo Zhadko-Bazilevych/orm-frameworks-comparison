@@ -21,26 +21,30 @@ export class UsersController {
   ) {}
 
   @Get()
-  async findAll(@Query('limit') limit: number) {
-    return await this.userPrismaService.getUsersDefault(limit);
+  async findAll(@Query('limit') limit: string) {
+    return await this.userPrismaService.getUsersDefault(Number(limit));
   }
 
   @Get(':id')
   async getOne(
-    @Param('id') id: number,
+    @Param('id') id: string,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ) {
-    return await this.usersService.call(orm, 'getUser', queryType, []);
+    return await this.usersService.call(orm, 'getUser', queryType, [
+      Number(id),
+    ]);
   }
 
   @Delete()
   async deleteUser(
-    @Query('id') id: number,
+    @Query('id') id: string,
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ): Promise<BaseResponse<unknown>> {
-    return await this.usersService.call(orm, 'deleteUser', queryType, [id]);
+    return await this.usersService.call(orm, 'deleteUser', queryType, [
+      Number(id),
+    ]);
   }
 
   @Post()
@@ -65,13 +69,13 @@ export class UsersController {
   @Put()
   async updateUser(
     @Body()
-    userData: { id: number; email: string; password: string; fullName: string },
+    userData: { id: string; email: string; password: string; fullName: string },
     @Query('orm') orm: ORM,
     @Query('queryType') queryType: QueryType,
   ): Promise<BaseResponse<unknown>> {
     const hashedPassword = (await bcrypt.hash(userData.password, 10)) as string;
     const updatedUser = {
-      id: userData.id,
+      id: Number(userData.id),
       email: userData.email,
       passwordHash: hashedPassword,
       fullName: userData.fullName,
