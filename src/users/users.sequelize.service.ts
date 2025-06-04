@@ -21,7 +21,8 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async getUserRaw(id: number) {
     const result = measureTime(async () => {
       const [userList] = (await this.userModel.sequelize!.query(
-        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at" FROM "User" AS "user" WHERE "user"."id" = '$1';`,
+        `SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at" 
+        FROM "User" AS "user" WHERE "user"."id" = $1;`,
         {
           bind: [id],
         },
@@ -34,7 +35,9 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   async getUserExplain(id: number) {
     const result = measureTime(async () => {
       const [explain] = await this.userModel.sequelize!.query(
-        `EXPLAIN (ANAlYZE) SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at" FROM "User" AS "user" WHERE "user"."id" = '$1';`,
+        `EXPLAIN (ANAlYZE) 
+        SELECT "id", "email", "password_hash" AS "passwordHash", "full_name" AS "fullName", "created_at" 
+        FROM "User" AS "user" WHERE "user"."id" = $1;`,
         {
           bind: [id],
         },
