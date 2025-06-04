@@ -361,6 +361,18 @@ export class OrdersTypeOrmService implements IOrdersServiceImplementation {
           throw new Error('Order not found');
         }
 
+        const orderItemsExplain = (await manager.query(
+          `
+        EXPLAIN (ANALYZE)
+        SELECT "OrderItem"."id" AS "OrderItem_id", "OrderItem"."order_id" AS "OrderItem_order_id", 
+               "OrderItem"."product_id" AS "OrderItem_product_id", "OrderItem"."quantity" AS "OrderItem_quantity", 
+               "OrderItem"."price" AS "OrderItem_price"
+        FROM "Order_item" "OrderItem"
+        WHERE "OrderItem"."order_id" = $1
+        `,
+          [orderId],
+        )) as { 'QUERY PLAN': string }[];
+
         const orderItems = (await manager.query(
           `
         SELECT "OrderItem"."id" AS "OrderItem_id", "OrderItem"."order_id" AS "OrderItem_order_id", 
@@ -457,6 +469,7 @@ export class OrdersTypeOrmService implements IOrdersServiceImplementation {
 
         return sumExplainTimes(
           explainOrderSelect,
+          orderItemsExplain,
           ...productExplains,
           ...updateStockExplains,
           explainOrderUpdate,
