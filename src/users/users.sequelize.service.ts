@@ -56,8 +56,10 @@ export class UsersSequelizeService implements IUsersServiceImplementation {
   }
 
   async deleteUserRaw(id: number) {
+    const sequelize = this.userModel.sequelize!;
+
     const result = measureTime(async () => {
-      const [deletedCount] = await this.userModel.sequelize!.query(
+      const [deletedCount] = await sequelize.query(
         `DELETE FROM "User" WHERE "id" = $1`,
         {
           bind: [id],

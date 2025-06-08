@@ -8,6 +8,7 @@ import { CommentsModule } from 'src/comments/comments.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { sequelizeConfig } from 'src/sequelize.config';
 import { typeOrmConfig } from 'src/typeORM.config';
+import { UtilsModule } from 'src/utils/utils.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { typeOrmConfig } from 'src/typeORM.config';
     OrdersModule,
     ProductsModule,
     CommentsModule,
+    UtilsModule,
   ],
 })
 export class AppModule implements OnModuleInit {

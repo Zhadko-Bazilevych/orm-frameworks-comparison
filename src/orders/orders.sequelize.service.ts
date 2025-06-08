@@ -89,17 +89,18 @@ export class OrdersSequelizeService implements IOrdersServiceImplementation {
   }
 
   async createOrderRaw(order: Optional<Order, 'id'>) {
+    const sequelize = this.orderModel.sequelize!;
+    const currentDate = new Date();
     const result = measureTime(async () => {
-      const [[newOrder]] = (await this.orderModel.sequelize!.query(
+      const [[newOrder]] = (await sequelize.query(
         `INSERT INTO "Order" ("id","user_id","status","total_price","created_at") VALUES (DEFAULT,$1,$2,$3,$4) RETURNING "id","user_id","status","total_price","created_at";`,
         {
-          bind: [order.userId, order.status, order.totalPrice, new Date()],
+          bind: [order.userId, order.status, order.totalPrice, currentDate],
         },
       )) as [Order[], unknown];
-      if (!order.orderItems) return newOrder;
       const orderId = newOrder.id;
-      for (const orderItem of order.orderItems) {
-        await this.orderModel.sequelize!.query(
+      for (const orderItem of order.orderItems!) {
+        await sequelize.query(
           `INSERT INTO "Order_item" ("order_id","product_id","quantity","price") VALUES ($1,$2,$3,$4) RETURNING "order_id","product_id","quantity","price";`,
           {
             bind: [

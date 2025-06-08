@@ -25,7 +25,7 @@ export type Order = {
 };
 
 export type OrderItem = {
-  orderId: number;
+  orderId?: number;
   productId: number;
   quantity: number;
   price: number;
