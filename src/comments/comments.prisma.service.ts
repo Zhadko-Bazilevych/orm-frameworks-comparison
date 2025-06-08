@@ -41,7 +41,7 @@ export class CommentsPrismaService implements ICommentsServiceImplementation {
 
   async getCommentTreeByIdRaw(id: number) {
     return await measureTime(async () => {
-      const rootResult = await this.prisma.$queryRawUnsafe<Comment[]>(
+      const rootResult = (await this.prisma.$queryRawUnsafe(
         `SELECT "public"."Comment"."id", "public"."Comment"."user_id", "public"."Comment"."product_id", "public"."Comment"."parent_id", "public"."Comment"."content", "public"."Comment"."created_at"
        FROM "public"."Comment"
        WHERE ("public"."Comment"."id" = $1 AND 1=1)
@@ -49,20 +49,20 @@ export class CommentsPrismaService implements ICommentsServiceImplementation {
         Number(id),
         1,
         0,
-      );
+      )) as Comment[];
 
       if (rootResult.length === 0) throw new Error('Root comment not found');
       const root = rootResult[0];
 
       const buildTree = async (comment: any): Promise<any> => {
-        const children = await this.prisma.$queryRawUnsafe<any[]>(
+        const children = (await this.prisma.$queryRawUnsafe(
           `SELECT "public"."Comment"."id", "public"."Comment"."user_id", "public"."Comment"."product_id", "public"."Comment"."parent_id", "public"."Comment"."content", "public"."Comment"."created_at"
          FROM "public"."Comment"
          WHERE "public"."Comment"."parent_id" = $1
          OFFSET $2`,
           comment.id,
           0,
-        );
+        )) as any[];
 
         const childTrees = await Promise.all(
           children.map((child) => buildTree(child)),
@@ -137,9 +137,7 @@ export class CommentsPrismaService implements ICommentsServiceImplementation {
     return measureTime(async () => {
       const explains: { 'QUERY PLAN': string }[][] = [];
 
-      const rootExplain = await this.prisma.$queryRawUnsafe<
-        { 'QUERY PLAN': string }[]
-      >(
+      const rootExplain = (await this.prisma.$queryRawUnsafe(
         `EXPLAIN (ANALYZE)
        SELECT "public"."Comment"."id", "public"."Comment"."user_id", "public"."Comment"."product_id", "public"."Comment"."parent_id", "public"."Comment"."content", "public"."Comment"."created_at"
        FROM "public"."Comment"
@@ -148,10 +146,10 @@ export class CommentsPrismaService implements ICommentsServiceImplementation {
         Number(id),
         1,
         0,
-      );
+      )) as { 'QUERY PLAN': string }[];
       explains.push(rootExplain);
 
-      const rootResult = await this.prisma.$queryRawUnsafe<Comment[]>(
+      const rootResult = (await this.prisma.$queryRawUnsafe(
         `SELECT "public"."Comment"."id", "public"."Comment"."user_id", "public"."Comment"."product_id", "public"."Comment"."parent_id", "public"."Comment"."content", "public"."Comment"."created_at"
        FROM "public"."Comment"
        WHERE ("public"."Comment"."id" = $1 AND 1=1)
@@ -159,15 +157,13 @@ export class CommentsPrismaService implements ICommentsServiceImplementation {
         Number(id),
         1,
         0,
-      );
+      )) as Comment[];
 
       if (rootResult.length === 0) throw new Error('Root comment not found');
       const root = rootResult[0];
 
       const buildTree = async (comment: any): Promise<unknown> => {
-        const explainChildren = await this.prisma.$queryRawUnsafe<
-          { 'QUERY PLAN': string }[]
-        >(
+        const explainChildren = (await this.prisma.$queryRawUnsafe(
           `EXPLAIN (ANALYZE)
          SELECT "public"."Comment"."id", "public"."Comment"."user_id", "public"."Comment"."product_id", "public"."Comment"."parent_id", "public"."Comment"."content", "public"."Comment"."created_at"
          FROM "public"."Comment"
@@ -175,17 +171,17 @@ export class CommentsPrismaService implements ICommentsServiceImplementation {
          OFFSET $2`,
           comment.id,
           0,
-        );
+        )) as { 'QUERY PLAN': string }[];
         explains.push(explainChildren);
 
-        const children = await this.prisma.$queryRawUnsafe<any[]>(
+        const children = (await this.prisma.$queryRawUnsafe(
           `SELECT "public"."Comment"."id", "public"."Comment"."user_id", "public"."Comment"."product_id", "public"."Comment"."parent_id", "public"."Comment"."content", "public"."Comment"."created_at"
          FROM "public"."Comment"
          WHERE "public"."Comment"."parent_id" = $1
          OFFSET $2`,
           comment.id,
           0,
-        );
+        )) as any[];
 
         const childTrees = await Promise.all(
           children.map((child) => buildTree(child)),

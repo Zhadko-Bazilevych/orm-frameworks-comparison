@@ -211,13 +211,11 @@ export class OrdersPrismaService implements IOrdersServiceImplementation {
         params.push(newOrder.id, item.productId, item.quantity, item.price);
       }
 
-      const insertOrderItemsExplain = await this.prisma.$queryRawUnsafe<
-        { 'QUERY PLAN': string }[]
-      >(
+      const insertOrderItemsExplain = (await this.prisma.$queryRawUnsafe(
         `EXPLAIN (ANALYZE, VERBOSE, FORMAT TEXT)
      INSERT INTO "public"."Order_item" ("order_id","product_id","quantity","price") VALUES ${values.join(', ')}`,
         ...params,
-      );
+      )) as { 'QUERY PLAN': string }[];
 
       const selectOrderExplain = await this.prisma.$queryRaw<
         { 'QUERY PLAN': string }[]
@@ -360,73 +358,65 @@ export class OrdersPrismaService implements IOrdersServiceImplementation {
       const explains: { 'QUERY PLAN': string }[][] = [];
 
       // EXPLAIN order SELECT
-      const orderExplain = await this.prisma.$queryRawUnsafe<
-        { 'QUERY PLAN': string }[]
-      >(
+      const orderExplain = (await this.prisma.$queryRawUnsafe(
         `EXPLAIN (ANALYZE)
        SELECT "id", "user_id", "status"::text, "total_price", "created_at"
        FROM "public"."Order"
        WHERE ("id" = $1 AND 1=1)
        LIMIT 1 OFFSET 0`,
         Number(orderId),
-      );
+      )) as { 'QUERY PLAN': string }[];
       explains.push(orderExplain);
 
-      const [order] = await this.prisma.$queryRawUnsafe<Order[]>(
+      const [order] = (await this.prisma.$queryRawUnsafe(
         `SELECT "id", "user_id", "status"::text, "total_price", "created_at"
        FROM "public"."Order"
        WHERE ("id" = $1 AND 1=1)
        LIMIT 1 OFFSET 0`,
         Number(orderId),
-      );
+      )) as Order[];
 
       if (!order) {
         throw new Error('Order not found');
       }
 
       // EXPLAIN order items SELECT
-      const orderItemsExplain = await this.prisma.$queryRawUnsafe<
-        { 'QUERY PLAN': string }[]
-      >(
+      const orderItemsExplain = (await this.prisma.$queryRawUnsafe(
         `EXPLAIN (ANALYZE)
        SELECT "id", "order_id", "product_id", "quantity", "price"
        FROM "public"."Order_item"
        WHERE "order_id" IN ($1)
        OFFSET 0`,
         order.id,
-      );
+      )) as { 'QUERY PLAN': string }[];
       explains.push(orderItemsExplain);
 
-      const orderItems = await this.prisma.$queryRawUnsafe<
-        { product_id: number; quantity: number }[]
-      >(
+      const orderItems = (await this.prisma.$queryRawUnsafe(
         `SELECT "id", "order_id", "product_id", "quantity", "price"
        FROM "public"."Order_item"
        WHERE "order_id" IN ($1)
        OFFSET 0`,
         order.id,
-      );
+      )) as { product_id: number; quantity: number }[];
 
       for (const item of orderItems) {
-        const productSelectExplain = await this.prisma.$queryRawUnsafe<
-          { 'QUERY PLAN': string }[]
-        >(
+        const productSelectExplain = (await this.prisma.$queryRawUnsafe(
           `EXPLAIN (ANALYZE)
          SELECT "id", "name", "description", "price", "stock", "last_updated", "category_id"
          FROM "public"."Product"
          WHERE ("id" = $1 AND 1=1)
          LIMIT 1 OFFSET 0`,
           item.product_id,
-        );
+        )) as { 'QUERY PLAN': string }[];
         explains.push(productSelectExplain);
 
-        const [product] = await this.prisma.$queryRawUnsafe<Product[]>(
+        const [product] = (await this.prisma.$queryRawUnsafe(
           `SELECT "id", "name", "description", "price", "stock", "last_updated", "category_id"
          FROM "public"."Product"
          WHERE ("id" = $1 AND 1=1)
          LIMIT 1 OFFSET 0`,
           item.product_id,
-        );
+        )) as Product[];
 
         if (!product) {
           throw new Error(`Product with id ${item.product_id} not found`);
@@ -440,9 +430,7 @@ export class OrdersPrismaService implements IOrdersServiceImplementation {
           );
         }
 
-        const productUpdateExplain = await this.prisma.$queryRawUnsafe<
-          { 'QUERY PLAN': string }[]
-        >(
+        const productUpdateExplain = (await this.prisma.$queryRawUnsafe(
           `EXPLAIN (ANALYZE)
          UPDATE "public"."Product"
          SET "stock" = $1
@@ -450,38 +438,36 @@ export class OrdersPrismaService implements IOrdersServiceImplementation {
          RETURNING "id", "name", "description", "price", "stock", "last_updated", "category_id"`,
           newStock,
           product.id,
-        );
+        )) as { 'QUERY PLAN': string }[];
         explains.push(productUpdateExplain);
 
-        await this.prisma.$queryRawUnsafe<Product[]>(
+        (await this.prisma.$queryRawUnsafe(
           `UPDATE "public"."Product"
          SET "stock" = $1
          WHERE ("id" = $2 AND 1=1)
          RETURNING "id", "name", "description", "price", "stock", "last_updated", "category_id"`,
           newStock,
           product.id,
-        );
+        )) as Product[];
       }
 
-      const orderUpdateExplain = await this.prisma.$queryRawUnsafe<
-        { 'QUERY PLAN': string }[]
-      >(
+      const orderUpdateExplain = (await this.prisma.$queryRawUnsafe(
         `EXPLAIN (ANALYZE)
        UPDATE "public"."Order"
        SET "status" = CAST('confirmed'::text AS "public"."Order_status_enum")
        WHERE ("id" = $1 AND 1=1)
        RETURNING "id", "user_id", "status"::text, "total_price", "created_at"`,
         Number(orderId),
-      );
+      )) as { 'QUERY PLAN': string }[];
       explains.push(orderUpdateExplain);
 
-      await this.prisma.$queryRawUnsafe<Order[]>(
+      (await this.prisma.$queryRawUnsafe(
         `UPDATE "public"."Order"
        SET "status" = CAST('confirmed'::text AS "public"."Order_status_enum")
        WHERE ("id" = $1 AND 1=1)
        RETURNING "id", "user_id", "status"::text, "total_price", "created_at"`,
         Number(orderId),
-      );
+      )) as Order[];
 
       return sumExplainTimes(...explains);
     });

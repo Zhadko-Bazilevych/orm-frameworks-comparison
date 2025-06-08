@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/db/prisma/prisma.service';
 import {
   IProductsServiceImplementation,
-  Product,
   ProductRequestBody,
 } from 'src/products/products.types';
 import { measureTime } from 'src/utils/utils.helpers';
@@ -36,7 +35,7 @@ export class ProductsPrismaService implements IProductsServiceImplementation {
     const direction = filterData.sortDirection.toLowerCase();
 
     const result = await measureTime(async () => {
-      const products = await this.prisma.$queryRawUnsafe<Product[]>(
+      const products = await this.prisma.$queryRawUnsafe(
         `
       SELECT "id", "name", "description", "price", "stock", "last_updated", "category_id"
       FROM "public"."Product"
